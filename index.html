@@ -118,7 +118,7 @@ button.ghost{background:transparent;color:var(--ink);border:1px solid var(--ctlb
 .kpi.alert b{color:inherit}
 td.nw{white-space:nowrap}
 .mini{display:flex;flex-wrap:wrap;gap:6px}
-@media(max-width:760px){nav{gap:2px}nav a{flex:1 1 0;flex-direction:column;gap:3px;justify-content:center;padding:6px 2px;min-height:54px;font-size:11.5px;text-align:center}nav a span{flex:none;white-space:nowrap}nav svg{width:20px;height:20px}nav a.on::before{left:25%;right:25%}nav em{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.kpi{padding:10px 12px;gap:10px}.kpi .ic{width:32px;height:32px}.kpi .ic svg{width:17px;height:17px}.kpi b{font-size:20px;white-space:nowrap}.kpi span{font-size:11.5px;line-height:1.25;display:block}.ptitle{font-size:24px}.phead p{font-size:13px}.foot{margin-top:4px;padding:10px 4px 0;grid-template-columns:1fr;gap:8px}.foot>small{display:none}.user{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
+@media(max-width:760px){nav{gap:2px}nav a{flex:1 1 0;flex-direction:column;gap:3px;justify-content:center;padding:6px 0;min-height:54px;font-size:10.5px;text-align:center}nav a span{flex:none;white-space:nowrap}nav svg{width:20px;height:20px}nav a.on::before{left:25%;right:25%}nav em{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.kpi{padding:10px 12px;gap:10px}.kpi .ic{width:32px;height:32px}.kpi .ic svg{width:17px;height:17px}.kpi b{font-size:20px;white-space:nowrap}.kpi span{font-size:11.5px;line-height:1.25;display:block}.ptitle{font-size:24px}.phead p{font-size:13px}.foot{margin-top:4px;padding:10px 4px 0;grid-template-columns:1fr;gap:8px}.foot>small{display:none}.user{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
 
 .user{display:grid;gap:6px;font-size:12px;color:var(--mut)}.user span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #auth{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:16px;background:linear-gradient(165deg,var(--tint) 0,var(--bg) 70%)}
@@ -148,12 +148,13 @@ td.nw{white-space:nowrap}
 .leaflet-container{font:inherit}.leaflet-tile-pane{filter:saturate(.7) brightness(1.03)}.leaflet-popup-content{margin:12px 14px;font-size:13px;line-height:1.4}.leaflet-popup-content b{font-size:14px}
 .leaflet-popup-content-wrapper{border-radius:8px}
 .drag .leaflet-marker-icon{cursor:move}
+.sd{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:3px;background:var(--line);vertical-align:middle}.sd.ok{background:#0f7b0f}.sd.wa{background:#e3a21a}.sd.bad{background:#c42b1c}
 .geo{font-size:12px;color:var(--mut);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 </style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
 <div class="app"><aside>
 <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="m12.6 10.5-2 3h2.8l-2 3"/></svg></div>
 <div><b>Prácticas FCT</b><span class="chip">1º SEA</span></div></div>
-<nav id="nav"><a href="#alumnos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14.6c2.4.2 4 1.8 4.5 4.4"/></svg><span>Alumnos</span><em id="bA"></em></a><a href="#asignacion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h4l10 12h4M3 18h4l3-3.6M14 9.6 17 6h4"/><path d="m19 3 2.5 3L19 9M19 15l2.5 3-2.5 3"/></svg><span>Asignación</span><em id="bR"></em></a><a href="#empresas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21V5.5L12 3v18M12 9l8 2.5V21M2.5 21h19"/><path d="M7 8h2M7 12h2M7 16h2M15 14h2M15 17.5h2"/></svg><span>Empresas</span><em id="bE"></em></a><a href="#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg><span>Mapa</span><em id="bM"></em></a></nav>
+<nav id="nav"><a href="#alumnos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14.6c2.4.2 4 1.8 4.5 4.4"/></svg><span>Alumnos</span><em id="bA"></em></a><a href="#asignacion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h4l10 12h4M3 18h4l3-3.6M14 9.6 17 6h4"/><path d="m19 3 2.5 3L19 9M19 15l2.5 3-2.5 3"/></svg><span>Asignación</span><em id="bR"></em></a><a href="#empresas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21V5.5L12 3v18M12 9l8 2.5V21M2.5 21h19"/><path d="M7 8h2M7 12h2M7 16h2M15 14h2M15 17.5h2"/></svg><span>Empresas</span><em id="bE"></em></a><a href="#seguimiento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 12l2.2 2.2L15.5 9.5M8.5 17.5h7"/></svg><span>Seguimiento</span><em id="bS"></em></a><a href="#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg><span>Mapa</span><em id="bM"></em></a></nav>
 <div class="foot"><div class="save" id="saveSt"><i></i><span>Conectando…</span></div>
 <div class="row" style="gap:6px"><button class="ghost" id="backup">Descargar copia</button><button class="ghost" id="restore">Restaurar</button><input type="file" id="restFile" accept=".json,application/json" hidden></div>
 <div class="user"><span id="uMail"></span><div class="row" style="gap:6px"><button class="ghost" id="secBtn">Seguridad</button><button class="ghost" id="logout">Salir</button></div></div>
@@ -199,6 +200,7 @@ td.nw{white-space:nowrap}
 </div>
 <div class="tbl scroll"><table class="stack" id="tEmp"></table></div>
 </section>
+<section class="view" id="v-seguimiento"><div id="segBox"></div></section>
 <section class="view" id="v-mapa">
 <div class="mapwrap"><div id="map"></div>
 <div class="mside card" id="mside"></div></div>
@@ -277,7 +279,7 @@ function asignar(){const out={},libre={};
   return out}
 
 // ---------- render ----------
-function render(){res=asignar();renderKpis();renderListA();renderEdA();renderRes();renderEmp()}
+function render(){res=asignar();renderKpis();renderListA();renderEdA();renderRes();renderEmp();renderSeg()}
 function renderKpis(){const al=Object.values(S.alu),act=al.filter(a=>a.estado==='realiza'),r=Object.entries(res);
   const sinPref=act.filter(a=>!(a.prefs||[]).length).length,sin=r.filter(([id,x])=>!x.emp&&(S.alu[id].prefs||[]).length).length,uno=r.filter(([,x])=>x.rank===0).length;
   const disp=demanda().filter(d=>d.fuera.length).length;
@@ -361,7 +363,7 @@ function openE(id){selE=id;const e=S.emp[id];if(!e)return;
   <div class="row" style="margin-top:8px"><button class="sec" id="addC">+ Contacto</button><span style="flex:1"></span><button class="danger" id="delE">Eliminar empresa</button></div>`;
   $('#ov').classList.add('on')}
 function openMsg(title,html,ok){$('#ovc').innerHTML=`<h2>${title}</h2>${html}<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="sec" id="closeOv">Cancelar</button><button id="okOv">Restaurar</button></div>`;$('#ov').classList.add('on');$('#okOv').onclick=()=>{$('#ov').classList.remove('on');ok()}}
-function closeE(){$('#ov').classList.remove('on');selE=null;render()}
+function closeE(){$('#ov').classList.remove('on');selE=null;selSeg=null;render()}
 
 function openCampos(){$('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Campos personalizados</h2><button class="sec" id="closeOv">Cerrar</button></div>
   <p class="note">Campos extra que aparecerán en la ficha de todas las empresas (p. ej. «Horario», «Web», «Persona que firma el concierto»).</p>
@@ -429,9 +431,9 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-a]
 $('#ov').addEventListener('click',ev=>{if(ev.target.id==='ov')closeE()});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#ov').classList.contains('on'))closeE()});
 
-function route(){const h=(location.hash||'#alumnos').slice(1);const v=['alumnos','asignacion','empresas','mapa'].includes(h)?h:'alumnos';$('#kpis').style.display=v==='mapa'?'none':'';
+function route(){const h=(location.hash||'#alumnos').slice(1);const v=['alumnos','asignacion','empresas','seguimiento','mapa'].includes(h)?h:'alumnos';$('#kpis').style.display=v==='mapa'?'none':'';
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
-  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+v));$('#ptitle').textContent={alumnos:'Alumnos',asignacion:'Asignación',empresas:'Empresas',mapa:'Mapa'}[v];$('#psub').textContent={alumnos:'Ficha de cada alumno: si hace la FCT, turno y sus preferencias de empresa.',asignacion:'Reparto automático según las preferencias, con ajustes manuales.',empresas:'Base de datos de empresas colaboradoras, conciertos y contactos.',mapa:'Dónde vive cada alumno y dónde están las empresas que ha pedido.'}[v];if(v==='mapa')setTimeout(abrirMapa,30)}
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+v));$('#ptitle').textContent={alumnos:'Alumnos',asignacion:'Asignación',empresas:'Empresas',seguimiento:'Seguimiento',mapa:'Mapa'}[v];$('#psub').textContent={alumnos:'Ficha de cada alumno: si hace la FCT, turno y sus preferencias de empresa.',asignacion:'Reparto automático según las preferencias, con ajustes manuales.',empresas:'Base de datos de empresas colaboradoras, conciertos y contactos.',seguimiento:'Horas, diarios, cuestionarios y contactos con las empresas durante las prácticas.',mapa:'Dónde vive cada alumno y dónde están las empresas que ha pedido.'}[v];if(v==='mapa')setTimeout(abrirMapa,30)}
 addEventListener('hashchange',route);route();
 
 // ---------- utilidades ----------
@@ -583,6 +585,79 @@ document.addEventListener('click',ev=>{const t=ev.target.closest('[data-mm],[dat
   if(t.dataset.sinu){const[k,id]=t.dataset.sinu.split(':');if(k==='a'){selA=id;location.hash='#alumnos';$('#edA')._id=null;render()}else openE(id)}});
 document.addEventListener('change',ev=>{if(ev.target.id==='mSel'){M.sel=ev.target.value;dibujarMapa(true)}if(ev.target.id==='mDrag'){M.drag=ev.target.checked;dibujarMapa(false);if(M.drag)toast('Arrastra cualquier punto a su sitio exacto; se guarda al soltarlo')}});
 const _render=render;render=function(){_render();if(map&&location.hash==='#mapa'&&!M.drag)dibujarMapa(false)};
+
+// ---------- seguimiento ----------
+const HITOS_DEF=[{id:'ini',label:'Inicial'},{id:'i1',label:'Intermedio 1'},{id:'i2',label:'Intermedio 2'},{id:'i3',label:'Intermedio 3'},{id:'i4',label:'Intermedio 4'},{id:'fin',label:'Final'}];
+const hitos=()=>HITOS_DEF.map(h=>({...h,fecha:(S.aj.hitos||{})[h.id]||''}));
+const hoyISO=()=>new Date().toISOString().slice(0,10);
+const diasEntre=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
+const segDe=a=>{a.seg??={};const s=a.seg;s.cuestA??={};s.cuestT??={};s.contactos??=[];return s};
+function estHito(hecho,h){if(hecho)return'ok';if(!h.fecha)return'';const d=diasEntre(hoyISO(),h.fecha);return d<0?'bad':d<=7?'wa':''}
+function segAvisos(){const av=[];const H=hitos();
+  for(const[id,a]of sortedAlu()){if(a.estado!=='realiza')continue;const s=segDe(a),r=res[id];
+    for(const h of H){if(estHito(s.cuestA[h.id],h)==='bad')av.push([id,`${a.nombre}: falta el cuestionario ${h.label.toLowerCase()} del alumno (vencía ${fmtD(h.fecha)})`]);
+      if(estHito(s.cuestT[h.id]?.fecha,h)==='bad')av.push([id,`${a.nombre}: falta el seguimiento ${h.label.toLowerCase()} con el tutor de empresa${r?.emp?' ('+S.emp[r.emp]?.nombre+')':''}`])}
+    if(+s.porRellenar>0)av.push([id,`${a.nombre}: ${s.porRellenar} día(s) del diario sin rellenar`]);
+    const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();if(S.aj.fechaInicio&&S.aj.fechaInicio<=hoyISO()){const ref=ult||S.aj.fechaInicio;const d=diasEntre(ref,hoyISO());if(d>=21)av.push([id,`${a.nombre}: ${ult?'hace '+d+' días del último contacto':'sin contactos registrados desde el inicio'}`])}}
+  return av}
+function horasObj(){return +S.aj.horasObjetivo||0}
+function renderSeg(){const box=$('#segBox');if(!box)return;const H=hitos();const rows=sortedAlu().filter(([,a])=>a.estado==='realiza');
+  const dot=(st,t,lbl)=>`<i class="sd ${st}" title="${esc(lbl)}${t?': '+esc(t):''}"></i>`;
+  const hz=H.map(h=>`<span class="tag ${h.fecha&&h.fecha<hoyISO()?'':'wa'}" style="${h.fecha?'':'opacity:.6'}">${h.label}: ${h.fecha?fmtD(h.fecha):'sin fecha'}</span>`).join('');
+  const obj=horasObj();
+  box.innerHTML=`<div class="toolbar"><div class="mini" style="flex:1">${hz}</div><button class="sec" id="segCal">Calendario y horas</button><button class="sec" id="segCsv">Exportar CSV</button></div>
+  <div class="tbl scroll"><table class="stack"><thead><tr><th>Alumno</th><th>Empresa · tutor</th><th>Horas</th><th class="n">Por rellenar</th><th>Anexos</th><th>Cuestionarios alumno</th><th>Seguimiento tutor</th><th>Último contacto</th></tr></thead><tbody>
+  ${rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp],tut=(e?.contactos||[]).find(c=>/tutor/i.test(c.rol))||(e?.contactos||[])[0];
+    const hc=+s.horasConf||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
+    return`<tr class="click" data-seg="${id}"><td>${esc(a.nombre)}</td><td>${e?esc(e.nombre):'<span class="note">sin asignar</span>'}${tut?.nombre?`<br><small class="note">${esc(tut.nombre)}</small>`:''}</td>
+    <td class="nw">${obj?`<div class="bars" style="width:90px"><i style="width:${pct}%;background:${pct>=100?'#0f7b0f':'#005fb8'}"></i></div><small>${hc} / ${obj} h</small>`:`<small>${hc?hc+' h':'—'}</small>`}</td>
+    <td class="n">${+s.porRellenar?`<span class="tag bad">${s.porRellenar}</span>`:'<small class="note">—</small>'}</td>
+    <td class="nw"><span class="tag ${s.anexoI?'ok':''}">I</span> <span class="tag ${s.anexoII?'ok':''}">II</span></td>
+    <td class="nw">${H.map(h=>dot(estHito(s.cuestA[h.id],h),s.cuestA[h.id]&&fmtD(s.cuestA[h.id]),h.label)).join('')}</td>
+    <td class="nw">${H.map(h=>dot(estHito(s.cuestT[h.id]?.fecha,h),s.cuestT[h.id]?.fecha&&fmtD(s.cuestT[h.id].fecha),h.label)).join('')}</td>
+    <td class="nw">${ult?`${fmtD(ult)}<br><small class="note">hace ${diasEntre(ult,hoyISO())} días</small>`:'<small class="note">—</small>'}</td></tr>`}).join('')||'<tr><td class="empty">Ningún alumno hará la FCT todavía.</td></tr>'}</tbody></table></div>
+  <div class="legend" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:10px 0 0"><div><i class="sd ok"></i>Hecho</div><div><i class="sd wa"></i>Vence en ≤ 7 días</div><div><i class="sd bad"></i>Vencido sin hacer</div><div><i class="sd"></i>Aún no toca</div></div>
+  <h2 class="sec-h">Pendiente</h2>${(()=>{const av=segAvisos();return av.length?'<div class="card"><ul style="margin:0;padding-left:20px">'+av.map(([id,t])=>`<li><button class="linkb" data-seg="${id}" style="color:var(--ink);text-align:left">${esc(t)}</button></li>`).join('')+'</ul></div>':'<p class="note">Nada pendiente.</p>'})()}`;
+  const b=$('#bS');const n=segAvisos().length;b.textContent=n||'';b.className=n?'r':''}
+function openSeg(id){const a=S.alu[id];if(!a)return;const s=segDe(a),H=hitos(),r=res[id],e=r?.emp&&S.emp[r.emp];selSeg=id;
+  const f=(k,l,t='number')=>`<label>${l}<input type="${t}" data-sg="${k}" value="${esc(s[k]??'')}"></label>`;
+  const tipos=['Llamada','Visita','Email','WhatsApp','Reunión','Otro'];
+  $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(a.nombre)}</h2><button class="sec" id="closeOv">Cerrar</button></div>
+  <p class="info" style="margin-top:12px">${e?`<b>${esc(e.nombre)}</b> · ${esc((e.contactos||[]).map(c=>[c.nombre,c.rol,c.telefono,c.email].filter(Boolean).join(' · ')).join(' | ')||e.telefono||'sin contacto')}`:'Sin empresa asignada'}</p>
+  <h3>Horas y asistencia</h3><div class="grid">${f('horasConf','Horas confirmadas en GDCAN')}${f('diasAsist','Días de asistencia')}${f('diasNoAsist','Días de no asistencia')}${f('porRellenar','Días del diario por rellenar')}${f('horario','Horario','text')}</div>
+  <div class="row" style="margin-top:10px;gap:16px"><label class="check"><input type="checkbox" data-sgc="anexoI"${s.anexoI?' checked':''}> Anexo I firmado</label><label class="check"><input type="checkbox" data-sgc="anexoII"${s.anexoII?' checked':''}> Anexo II</label></div>
+  <h3>Cuestionarios del alumno</h3><div class="grid">${H.map(h=>`<label>${h.label}${h.fecha?` <small class="note">(límite ${fmtD(h.fecha)})</small>`:''}<div class="row" style="gap:6px;flex-wrap:nowrap"><input type="date" data-qa="${h.id}" value="${esc(s.cuestA[h.id]||'')}" style="margin-top:6px"><button class="ghost" data-hoy="qa:${h.id}" style="margin-top:6px">Hoy</button></div></label>`).join('')}</div>
+  <label style="margin-top:12px">Diario de actividades: observaciones<textarea data-sg="diario">${esc(s.diario||'')}</textarea></label>
+  <h3>Seguimiento con el tutor de empresa</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">${H.map(h=>{const x=s.cuestT[h.id]||{};return`<div class="contact" style="grid-template-columns:1fr;margin:0"><label>${h.label}${h.fecha?` <small class="note">(límite ${fmtD(h.fecha)})</small>`:''}<div class="row" style="gap:6px;flex-wrap:nowrap"><input type="date" data-qt="${h.id}" value="${esc(x.fecha||'')}" style="margin-top:6px"><button class="ghost" data-hoy="qt:${h.id}" style="margin-top:6px">Hoy</button></div></label><label>Comentario<textarea data-qtc="${h.id}" style="min-height:52px">${esc(x.com||'')}</textarea></label></div>`}).join('')}</div>
+  <h3>Registro de contactos</h3>
+  <div class="contact" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))"><label>Fecha<input type="date" id="cFecha" value="${hoyISO()}"></label><label>Tipo<select id="cTipo">${tipos.map(t=>`<option>${t}</option>`).join('')}</select></label><label>Con<select id="cCon"><option>Tutor de empresa</option><option>Alumno</option><option>Otro</option></select></label><label style="grid-column:1/-1">Notas<textarea id="cNotas" style="min-height:52px"></textarea></label><div><button id="cAdd">Añadir contacto</button></div></div>
+  <div class="tbl scroll" style="margin-top:8px"><table><tbody>${[...s.contactos].map((c,i)=>[c,i]).sort((x,y)=>(y[0].fecha||'').localeCompare(x[0].fecha||'')).map(([c,i])=>`<tr><td class="nw">${fmtD(c.fecha)}</td><td class="nw">${esc(c.tipo)} · ${esc(c.con)}</td><td>${esc(c.notas)}</td><td><button class="ghost" data-cdx="${i}">Quitar</button></td></tr>`).join('')||'<tr><td class="note">Sin contactos registrados.</td></tr>'}</tbody></table></div>
+  <label style="margin-top:12px">Comentarios generales<textarea data-sg="comentarios">${esc(s.comentarios||'')}</textarea></label>`;
+  $('#ov').classList.add('on')}
+let selSeg=null;
+function openCal(){const H=hitos();$('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Calendario de seguimiento</h2><button class="sec" id="closeOv">Cerrar</button></div>
+  <p class="note">Fechas límite de cada cuestionario/seguimiento (las marca la Consejería o el centro). Sirven para los avisos y los colores.</p>
+  <div class="grid" style="margin-top:12px">${H.map(h=>`<label>${h.label}<input type="date" data-hito="${h.id}" value="${esc(h.fecha)}"></label>`).join('')}<label>Horas mínimas a completar<input type="number" id="horasObj" value="${esc(S.aj.horasObjetivo||'')}" placeholder="p. ej. 500"></label></div>`;$('#ov').classList.add('on')}
+document.addEventListener('input',ev=>{const t=ev.target;const a=selSeg&&S.alu[selSeg];
+  if(a&&$('#ov').classList.contains('on')){const s=segDe(a);
+    if(t.dataset.sg){s[t.dataset.sg]=t.value;save('alumnos',selSeg)}
+    if(t.dataset.qa!==undefined){s.cuestA[t.dataset.qa]=t.value;save('alumnos',selSeg)}
+    if(t.dataset.qt){(s.cuestT[t.dataset.qt]??={}).fecha=t.value;save('alumnos',selSeg)}
+    if(t.dataset.qtc){(s.cuestT[t.dataset.qtc]??={}).com=t.value;save('alumnos',selSeg)}}
+  if(t.dataset.hito){(S.aj.hitos??={})[t.dataset.hito]=t.value;clearTimeout(t._t);t._t=setTimeout(()=>saveCfg('ajustes',S.aj),500)}
+  if(t.id==='horasObj'){S.aj.horasObjetivo=t.value;clearTimeout(t._t);t._t=setTimeout(()=>saveCfg('ajustes',S.aj),500)}});
+document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.sgc&&selSeg){segDe(S.alu[selSeg])[t.dataset.sgc]=t.checked;save('alumnos',selSeg)}});
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-seg],#segCal,#segCsv,#cAdd,[data-cdx],[data-hoy]');if(!t)return;
+  if(t.dataset.seg){openSeg(t.dataset.seg);return}
+  if(t.id==='segCal')return openCal();
+  if(t.dataset.hoy){const[k,h]=t.dataset.hoy.split(':');const s=segDe(S.alu[selSeg]);if(k==='qa')s.cuestA[h]=hoyISO();else(s.cuestT[h]??={}).fecha=hoyISO();save('alumnos',selSeg);openSeg(selSeg);return}
+  if(t.id==='cAdd'){const s=segDe(S.alu[selSeg]);const notas=$('#cNotas').value.trim();s.contactos.push({fecha:$('#cFecha').value||hoyISO(),tipo:$('#cTipo').value,con:$('#cCon').value,notas});save('alumnos',selSeg);openSeg(selSeg);toast('Contacto añadido');return}
+  if(t.dataset.cdx){if(!t.dataset.ok){t.dataset.ok=1;t.textContent='¿Seguro?';return}segDe(S.alu[selSeg]).contactos.splice(+t.dataset.cdx,1);save('alumnos',selSeg);openSeg(selSeg);return}
+  if(t.id==='segCsv'){const H=hitos();const q=v=>{v=String(v??'');return/[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+    const L=[['Alumno','Empresa','Horas confirmadas','Días asistencia','Días no asistencia','Días por rellenar','Anexo I','Anexo II',...H.map(h=>'Alumno '+h.label),'Diario',...H.flatMap(h=>['Tutor '+h.label,'Comentario '+h.label]),'Contactos','Comentarios']];
+    for(const[id,a]of sortedAlu()){if(a.estado!=='realiza')continue;const s=segDe(a),e=S.emp[res[id]?.emp];
+      L.push([a.nombre,e?.nombre||'',s.horasConf,s.diasAsist,s.diasNoAsist,s.porRellenar,s.anexoI?'Sí':'',s.anexoII?'Sí':'',...H.map(h=>fmtD(s.cuestA[h.id])),s.diario,...H.flatMap(h=>[fmtD(s.cuestT[h.id]?.fecha),s.cuestT[h.id]?.com]),s.contactos.map(c=>`${fmtD(c.fecha)} ${c.tipo} (${c.con}): ${c.notas}`).join(' | '),s.comentarios])}
+    bajar('seguimiento_FCT_1SEA.csv','﻿'+L.map(r=>r.map(q).join(';')).join('\r\n'),'text/csv;charset=utf-8')}});
 
 boot();
 
