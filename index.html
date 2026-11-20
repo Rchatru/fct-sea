@@ -387,10 +387,15 @@ document.addEventListener('change',async ev=>{const t=ev.target,a=S.alu[selA];
   if(t.id==='incT'){S.aj.incluirTramite=t.checked;saveCfg('ajustes',S.aj);render()}
   if(t.id==='restFile'&&t.files[0]){let d;try{d=JSON.parse(await t.files[0].text())}catch{toast('Archivo no válido');return}t.value='';
     if(!d.empresas||!d.alumnos){toast('No parece una copia de esta app');return}
-    openMsg('Restaurar copia',`<p>La copia es del ${esc((d.fecha||'').slice(0,10).split('-').reverse().join('/'))} y tiene ${Object.keys(d.empresas).length} empresas y ${Object.keys(d.alumnos).length} alumnos. Se sobrescribirán los datos actuales de esos registros.</p>`,async()=>{
-      Object.assign(S.emp,d.empresas);Object.assign(S.alu,d.alumnos);if(d.campos)S.campos=d.campos;if(d.ajustes)S.aj={...S.aj,...d.ajustes};render();
-      for(const id in d.empresas){await track(db.doc('empresas/'+id).set(d.empresas[id]))}for(const id in d.alumnos){await track(db.doc('alumnos/'+id).set(d.alumnos[id]))}
-      saveCfg('campos',{lista:S.campos});saveCfg('ajustes',S.aj);toast('Copia restaurada');await cargar();ubicar()});return}
+    const nE=Object.keys(d.empresas).length,nA=Object.keys(d.alumnos).length,faltan=[...Object.keys(d.empresas).filter(k=>!S.emp[k]),...Object.keys(d.alumnos).filter(k=>!S.alu[k])].length;
+    $('#ovc').innerHTML=`<h2>Importar copia</h2><p>La copia es del ${esc((d.fecha||'').slice(0,10).split('-').reverse().join('/'))} y tiene ${nE} empresas y ${nA} alumnos. Ahora mismo faltan <b>${faltan}</b> de esos registros en la base de datos.</p>
+      <p class="note"><b>Añadir solo lo que falta</b> no toca nada de lo que ya tienes. <b>Sobrescribir todo</b> deja los datos exactamente como en la copia (perderías los cambios hechos después).</p>
+      <div class="row" style="justify-content:flex-end;margin-top:16px;gap:8px"><button class="sec" id="closeOv">Cancelar</button><button class="sec" id="impAll">Sobrescribir todo</button><button id="impNew">Añadir solo lo que falta</button></div>`;$('#ov').classList.add('on');
+    const run=async solo=>{$('#ov').classList.remove('on');
+      const rows=[...Object.entries(d.empresas).map(([id,v])=>({col:'empresas',id,data:v})),...Object.entries(d.alumnos).map(([id,v])=>({col:'alumnos',id,data:v})),{col:'config',id:'campos',data:{lista:d.campos||[]}},...(d.ajustes?[{col:'config',id:'ajustes',data:{...S.aj,...d.ajustes}}]:[])];
+      toast('Importando…');try{await track(SB.from('docs').upsert(rows,{onConflict:'col,id',ignoreDuplicates:solo}).then(chk))}catch{return}
+      toast(solo?'Añadidos los registros que faltaban':'Copia restaurada');await cargar();ubicar()};
+    $('#impNew').onclick=()=>run(true);$('#impAll').onclick=()=>run(false);return}
   if(t.id==='fe')renderEmp();
   if(t.dataset.act){S.emp[t.dataset.act].activa=t.checked;save('empresas',t.dataset.act);render()}
   if(selE&&['concierto','turno','activa','seguimiento','plazas'].includes(t.dataset.ef))renderKpis()});
