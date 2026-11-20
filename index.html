@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.cartociudad.es; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://gadcmpcfxwlroanjefxu.supabase.co wss://gadcmpcfxwlroanjefxu.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org; font-src 'self'; base-uri 'self'; form-action 'self'">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230067c0'/%3E%3Cpath d='m13 5-4 7h4l-2 7 6-9h-4l2-5z' fill='white'/%3E%3C/svg%3E"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prácticas FCT · 1º SEA</title>
+<style>
+/* VOICE: herramienta de escritorio tranquila, como una app nativa de Windows 11
+   IDEA: la app Configuración de Windows 11 — menú lateral, tarjetas sobre fondo mica
+   PICTURE: la propia herramienta: lista + ficha, tablas y tarjetas de cifras
+   COLOUR and TYPE: fondo mica gris, tarjetas blancas, acento azul Windows #005fb8; Segoe UI Variable / sistema
+   LAYOUT: menú lateral fijo a la izquierda, contenido en tarjetas a la derecha; arriba en móvil */
+:root{color-scheme:light dark;--bg:light-dark(#f3f3f3,#202020);--card:light-dark(#ffffff,#2b2b2b);--card2:light-dark(#f9f9f9,#323232);--ink:light-dark(#1b1b1b,#ffffff);--mut:light-dark(#5f5f5f,#c5c5c5);
+--line:light-dark(#e5e5e5,#3a3a3a);--ctl:light-dark(#ffffff,#2d2d2d);--ctlb:light-dark(#d1d1d1,#454545);--hov:light-dark(rgba(0,0,0,.04),rgba(255,255,255,.06));--sel:light-dark(rgba(0,0,0,.06),rgba(255,255,255,.08));
+--ac:light-dark(#005fb8,#60cdff);--acin:light-dark(#fff,#000);--okb:light-dark(#dff6dd,#393d1b);--oki:light-dark(#0f7b0f,#6ccb5f);--bab:light-dark(#fde7e9,#442726);--bai:light-dark(#c42b1c,#ff99a4);--wab:light-dark(#fff4ce,#433519);--wai:light-dark(#8a5300,#fce100);
+--sh:0 2px 4px rgba(0,0,0,.04),0 0 0 1px var(--line);--r:8px}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,"Helvetica Neue",sans-serif;overflow-x:clip}
+.app{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+aside{padding:20px 12px;position:sticky;top:0;height:100vh}
+.brand{display:flex;gap:12px;align-items:center;padding:4px 12px 20px}
+.brand .logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#0078d4,#00b7c3);display:grid;place-items:center;flex:none}
+.brand b{display:block;font-size:14px;font-weight:600}.brand small{color:var(--mut);font-size:12px}
+nav{display:flex;flex-direction:column;gap:3px}
+nav a{position:relative;display:flex;gap:14px;align-items:center;padding:0 12px;min-height:40px;border-radius:6px;color:var(--ink);text-decoration:none}
+nav a:hover{background:var(--hov)}nav a.on{background:var(--sel);font-weight:600}
+nav a.on::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:3px;border-radius:3px;background:var(--ac)}
+nav svg{width:18px;height:18px;flex:none}
+main{padding:28px clamp(16px,3vw,40px) 40px;max-width:1400px}
+.ptitle{font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;font-size:28px;font-weight:600;line-height:1.2;margin:0 0 18px}
+@media(max-width:760px){.app{grid-template-columns:minmax(0,1fr)}aside{position:static;height:auto;padding:12px 12px 0}.brand{padding-bottom:12px}nav{flex-direction:row;overflow-x:auto}nav a{flex:1;justify-content:center;gap:8px}nav a.on::before{left:30%;right:30%;top:auto;bottom:0;width:auto;height:3px}main{padding-top:18px}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:22px}
+.kpi{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:14px 16px}
+.kpi b{display:block;font-size:26px;font-weight:600;line-height:1.15;font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif}.kpi span{font-size:12px;color:var(--mut)}
+.kpi.alert b{color:var(--bai)}
+.view{display:none}.view.on{display:block}
+.split{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1000px){.split{grid-template-columns:minmax(0,1fr)}}
+.list{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:4px;max-height:72vh;overflow:auto}
+.li{position:relative;display:flex;justify-content:space-between;gap:8px;padding:9px 12px;border-radius:6px;cursor:pointer;align-items:center}
+.li:hover{background:var(--hov)}.li.sel{background:var(--sel)}
+.li.sel::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:3px;background:var(--ac)}
+.li small{color:var(--mut);font-size:12px}
+.tag{font-size:12px;padding:2px 8px;border-radius:999px;white-space:nowrap;background:var(--card2);color:var(--mut);box-shadow:inset 0 0 0 1px var(--line)}
+.tag.ok{background:var(--okb);color:var(--oki);box-shadow:none}.tag.bad{background:var(--bab);color:var(--bai);box-shadow:none}.tag.wa{background:var(--wab);color:var(--wai);box-shadow:none}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:20px 24px}
+h2{font-size:20px;font-weight:600;line-height:1.25;margin:0 0 12px}h3{font-size:14px;font-weight:600;margin:24px 0 8px}
+.sec-h{margin-top:28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px 16px}
+label{display:block;font-size:13px;color:var(--ink)}
+input,select,textarea{display:block;width:100%;font:inherit;font-size:14px;padding:6px 11px;margin-top:6px;border:1px solid var(--ctlb);border-bottom-color:light-dark(#8a8a8a,#9a9a9a);border-radius:4px;background:var(--ctl);color:var(--ink);min-height:34px}
+textarea{min-height:72px;resize:vertical}
+input:hover,select:hover,textarea:hover{background:var(--card2)}
+input:focus,select:focus,textarea:focus{outline:none;border-bottom:2px solid var(--ac);padding-bottom:5px;background:var(--ctl)}
+button:focus-visible,a:focus-visible,.li:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+button{font:inherit;font-size:14px;min-height:34px;padding:5px 16px;border-radius:4px;border:1px solid transparent;background:var(--ac);color:var(--acin);cursor:pointer}
+button:hover{filter:brightness(1.08)}button:active{filter:brightness(.92)}
+button.sec{background:var(--ctl);color:var(--ink);border-color:var(--ctlb)}button.sec:hover{background:var(--card2);filter:none}
+button.danger{background:var(--ctl);color:var(--bai);border-color:var(--ctlb)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.prefs{display:grid;gap:8px}.pref{display:grid;grid-template-columns:30px minmax(0,1fr);gap:10px;align-items:start}
+.pref b{margin-top:8px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line);font-size:12px;font-weight:600}
+.pref select{margin-top:6px}
+.note{font-size:13px;color:var(--mut);margin:6px 0 0}.note.bad{color:var(--bai)}
+.info{margin:0 0 16px;padding:10px 14px;border-radius:6px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+th{font-size:12px;font-weight:600;color:var(--mut);background:var(--card)}
+td.n,th.n{text-align:right;white-space:nowrap}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--hov)}
+td select{margin:0;min-width:200px}
+.tbl{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
+.scroll{overflow-x:auto}
+.toolbar{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+.toolbar .grow{flex:1 1 240px}
+.check{display:flex;gap:8px;align-items:center;min-height:34px;font-size:13px}
+.check input{width:18px;height:18px;min-height:0;margin:0;accent-color:var(--ac)}
+.bars{display:flex;height:6px;width:110px;background:var(--line);border-radius:3px;overflow:hidden}.bars i{display:block;height:100%}
+.contact{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding:14px;border-radius:6px;margin-bottom:8px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line)}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:9;overflow:auto;padding:5vh 12px}
+#ov.on{display:block}#ov .card{max-width:880px;margin:0 auto;border-radius:12px;box-shadow:0 32px 64px rgba(0,0,0,.28),0 0 0 1px var(--line)}
+#msg{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--card);color:var(--ink);box-shadow:0 8px 16px rgba(0,0,0,.14),0 0 0 1px var(--line);border-radius:8px;padding:10px 18px;display:none;z-index:10}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+@media(max-width:600px){.stack thead{display:none}.stack tr{display:grid;padding:10px 12px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut);font-size:12px}.stack td:empty{display:none}td select{min-width:0}}
+@media(prefers-reduced-motion:no-preference){.view.on{animation:f .25s cubic-bezier(.1,.9,.2,1)}@keyframes f{from{opacity:0;transform:translateY(8px)}}#ov.on .card{animation:f .25s cubic-bezier(.1,.9,.2,1)}}
+.sw{position:relative;display:inline-block;width:40px;height:20px;cursor:pointer}.sw input{position:absolute;opacity:0;inset:0;margin:0;width:100%;height:100%;min-height:0;cursor:pointer}
+.sw i{position:absolute;inset:0;border-radius:10px;border:1px solid light-dark(#8a8a8a,#9a9a9a);background:var(--ctl);transition:.15s}.sw i::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:light-dark(#5f5f5f,#c5c5c5);transition:.15s}
+.sw input:checked+i{background:var(--ac);border-color:var(--ac)}.sw input:checked+i::after{left:23px;background:var(--acin)}.sw input:focus-visible+i{outline:2px solid var(--ink);outline-offset:2px}
+tr.off td{color:var(--mut)}tr.off td .tag{opacity:.6}
+
+[hidden]{display:none!important}
+:root{--tint:light-dark(#dde9f8,#1a2436)}
+body{background:linear-gradient(165deg,var(--tint) 0,var(--bg) 480px) fixed}
+aside{display:flex;flex-direction:column;gap:8px;padding:24px 14px}
+.brand{gap:14px;padding:6px 10px 22px}
+.brand .logo{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#0067c0 0,#00a2ad 100%);box-shadow:0 4px 12px rgba(0,103,192,.35),inset 0 1px 0 rgba(255,255,255,.3)}
+.brand .logo svg{width:24px;height:24px}
+.brand b{font-family:"Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;font-size:18px;font-weight:600;line-height:1.2}
+.chip{display:inline-block;margin-top:4px;font-size:12px;font-weight:600;padding:1px 9px;border-radius:999px;background:light-dark(rgba(0,95,184,.1),rgba(96,205,255,.15));color:var(--ac)}
+nav a{min-height:42px}nav a span{flex:1}
+nav em{font-style:normal;font-size:12px;font-weight:600;min-width:22px;padding:0 7px;line-height:20px;border-radius:999px;text-align:center;background:light-dark(rgba(0,0,0,.06),rgba(255,255,255,.1));color:var(--mut)}
+nav em:empty{display:none}nav em.r{background:var(--bai);color:#fff}nav em.w{background:var(--wab);color:var(--wai)}
+.foot{margin-top:auto;padding:14px 10px 0;border-top:1px solid var(--line);display:grid;gap:10px}
+.foot small{color:var(--mut);font-size:12px}
+.save{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--mut)}.save i{width:8px;height:8px;border-radius:50%;background:var(--mut)}
+.save.ok i{background:#0f7b0f}.save.busy i{background:var(--ac);animation:pl 1s infinite}.save.err i{background:var(--bai)}
+@keyframes pl{50%{opacity:.3}}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--ctlb);font-size:12px;min-height:30px;padding:3px 10px}button.ghost:hover{background:var(--hov);filter:none}
+.phead{margin-bottom:18px}.phead p{margin:2px 0 0;color:var(--mut)}.ptitle{margin:0}
+.kpi{display:flex;gap:14px;align-items:center}
+.kpi .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;flex:none}
+.kpi .ic svg{width:20px;height:20px}
+.kpi .t{min-width:0}
+.c-b{background:light-dark(#e1efff,#1a3350);color:light-dark(#005fb8,#60cdff)}.c-g{background:var(--okb);color:var(--oki)}.c-r{background:var(--bab);color:var(--bai)}.c-a{background:var(--wab);color:var(--wai)}.c-p{background:light-dark(#efe7ff,#352a4d);color:light-dark(#6b3fc4,#c9a8ff)}
+.kpi.alert b{color:inherit}
+td.nw{white-space:nowrap}
+.mini{display:flex;flex-wrap:wrap;gap:6px}
+@media(max-width:760px){.foot{display:none}nav em{display:none}}
+
+.user{display:grid;gap:6px;font-size:12px;color:var(--mut)}.user span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#auth{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:16px;background:linear-gradient(165deg,var(--tint) 0,var(--bg) 70%)}
+#auth.on{display:grid}.authbox{width:100%;max-width:400px;padding:28px}
+.authbox .brand{padding:0 0 18px}.authbox form{display:grid;gap:12px}.authbox button[type=submit]{width:100%;min-height:38px}
+.linkb{background:none;border:0;color:var(--ac);padding:0;min-height:0;font-size:13px;cursor:pointer}.linkb:hover{text-decoration:underline;filter:none}
+.authbox .err{color:var(--bai);font-size:13px;margin:0}.authbox .ok{color:var(--oki);font-size:13px;margin:0}
+.qr{background:#fff;padding:10px;border-radius:8px;width:200px;height:200px;margin:8px auto;display:block}
+.mapwrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+#map{height:calc(100vh - 150px);min-height:480px;border-radius:var(--r);box-shadow:var(--sh);z-index:0;background:#dfe8ef}
+.mside{max-height:calc(100vh - 150px);overflow:auto;padding:18px}
+@media(max-width:1000px){.mapwrap{grid-template-columns:minmax(0,1fr)}#map{height:62vh;min-height:360px}.mside{max-height:none}}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line);border-radius:6px;padding:3px;margin-bottom:14px}
+.seg button{background:transparent;color:var(--ink);min-height:30px;border-radius:4px}.seg button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:600}
+.plist{display:grid;gap:6px;margin:10px 0}.pitem{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border-radius:6px;background:var(--card2)}
+.pitem.asig{box-shadow:inset 0 0 0 2px var(--ac)}.pitem small{color:var(--mut);display:block}.pitem .t{font-size:12px;text-align:right;white-space:nowrap}
+.dot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700}
+.legend{display:grid;gap:6px;font-size:12px;color:var(--mut);margin-top:12px}.legend div{display:flex;gap:8px;align-items:center}
+.legend i{display:inline-block;flex:none}
+.mk-al{width:34px;height:34px;border-radius:50%;background:#005fb8;color:#fff;display:grid;place-items:center;font:700 12px/1 "Segoe UI",system-ui,sans-serif;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.mk-al.s{width:26px;height:26px;font-size:10px;border-width:2px;cursor:pointer}.mk-al.off{background:#8a8a8a}
+.mk-p{width:28px;height:28px;border-radius:50%;color:#fff;display:grid;place-items:center;font:700 13px/1 "Segoe UI",system-ui,sans-serif;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.mk-p.asig{box-shadow:0 0 0 5px rgba(0,95,184,.45),0 2px 6px rgba(0,0,0,.35)}
+.mk-d{width:12px;height:12px;border-radius:50%;background:#6b7a88;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+.mk-d.off{background:transparent;border:2px solid #9aa5ae;box-shadow:none}
+.mk-g{border-radius:50%;background:rgba(107,63,196,.85);border:2px solid #fff;color:#fff;display:grid;place-items:center;font:700 11px/1 system-ui,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.leaflet-container{font:inherit}.leaflet-tile-pane{filter:saturate(.7) brightness(1.03)}.leaflet-popup-content{margin:12px 14px;font-size:13px;line-height:1.4}.leaflet-popup-content b{font-size:14px}
+.leaflet-popup-content-wrapper{border-radius:8px}
+.drag .leaflet-marker-icon{cursor:move}
+.geo{font-size:12px;color:var(--mut);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+</style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
+<div class="app"><aside>
+<div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="m12.6 10.5-2 3h2.8l-2 3"/></svg></div>
+<div><b>Prácticas FCT</b><span class="chip">1º SEA</span></div></div>
+<nav id="nav"><a href="#alumnos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14.6c2.4.2 4 1.8 4.5 4.4"/></svg><span>Alumnos</span><em id="bA"></em></a><a href="#asignacion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h4l10 12h4M3 18h4l3-3.6M14 9.6 17 6h4"/><path d="m19 3 2.5 3L19 9M19 15l2.5 3-2.5 3"/></svg><span>Asignación</span><em id="bR"></em></a><a href="#empresas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21V5.5L12 3v18M12 9l8 2.5V21M2.5 21h19"/><path d="M7 8h2M7 12h2M7 16h2M15 14h2M15 17.5h2"/></svg><span>Empresas</span><em id="bE"></em></a><a href="#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg><span>Mapa</span><em id="bM"></em></a></nav>
+<div class="foot"><div class="save" id="saveSt"><i></i><span>Conectando…</span></div>
+<div class="row" style="gap:6px"><button class="ghost" id="backup">Descargar copia</button><button class="ghost" id="restore">Restaurar</button><input type="file" id="restFile" accept=".json,application/json" hidden></div>
+<div class="user"><span id="uMail"></span><div class="row" style="gap:6px"><button class="ghost" id="secBtn">Seguridad</button><button class="ghost" id="logout">Salir</button></div></div>
+<small>CIFP Virgen de Las Nieves</small></div>
+</aside>
+<main>
+<header class="phead"><h1 class="ptitle" id="ptitle">Alumnos</h1><p id="psub"></p></header>
+<div class="kpis" id="kpis"></div>
+<div id="load" class="empty">Cargando datos…</div>
+
+<section class="view" id="v-alumnos">
+<div class="split">
+<div>
+<div class="toolbar"><input id="qa" class="grow" style="flex:1 1 0;margin:0" placeholder="Buscar alumno" aria-label="Buscar alumno"><button id="addA">Añadir</button></div>
+<div class="list" id="listA"></div>
+</div>
+<div id="edA"></div>
+</div>
+</section>
+
+<section class="view" id="v-asignacion">
+<div class="toolbar">
+<label>Criterio del reparto<select id="crit"><option value="primeras">Máximo de alumnos en su 1ª opción</option><option value="equilibrado">Equilibrado: que nadie baje mucho</option></select></label>
+<label>Fecha de inicio de prácticas<input type="date" id="fIni"></label>
+<label class="check"><input type="checkbox" id="incT"> Contar conciertos en trámite</label>
+<span style="flex:1"></span><button id="freeze" class="sec" title="Fija a cada alumno en la empresa que tiene ahora, para que nuevos cambios no lo muevan">Fijar reparto actual</button><button id="unfreeze" class="sec">Quitar fijados</button><button id="cpy" class="sec">Copiar para Excel</button><button id="expCsv">Exportar CSV</button>
+</div>
+<p class="note info">El reparto busca la combinación en la que el grupo, en conjunto, queda más cerca de sus primeras opciones. «Equilibrado» castiga mucho más bajar a la 3ª, 4ª o 5ª, así que prefiere que todos queden en 2ª antes que uno en 4ª. Los conciertos se comprueban a la fecha de inicio (o a hoy si no la pones). Fija un alumno en una empresa y el resto se recalcula.</p>
+<h2 class="sec-h">Reparto propuesto</h2>
+<div class="tbl scroll"><table class="stack" id="tRes"></table></div>
+<h2 class="sec-h">Demanda por empresa</h2>
+<p class="note" style="margin:-6px 0 12px">Solo empresas pedidas o con alumnado asignado. «Disputada» = está completa y algún alumno la tenía por delante de la que le ha tocado (pasa el ratón para ver quién). Las plazas sin confirmar cuentan como 1.</p>
+<div class="tbl scroll"><table class="stack" id="tDem"></table></div>
+<h2 class="sec-h">Avisos</h2>
+<div id="avisos"></div>
+</section>
+
+<section class="view" id="v-empresas">
+<div class="toolbar">
+<input id="qe" class="grow" placeholder="Buscar empresa, municipio o contacto" aria-label="Buscar empresa" style="margin:0">
+<select id="fe" aria-label="Filtrar por concierto" style="width:auto;margin:0"><option value="">Todas</option><option value="act">Solo activas</option><option value="inact">Solo desactivadas</option><option value="si">Vigente</option><option value="tramite">En trámite</option><option value="no">Sin concierto</option><option value="cad">Caducado</option></select>
+<button id="campos" class="sec">Campos personalizados</button><button id="addE">Añadir empresa</button>
+</div>
+<div class="tbl scroll"><table class="stack" id="tEmp"></table></div>
+</section>
+<section class="view" id="v-mapa">
+<div class="mapwrap"><div id="map"></div>
+<div class="mside card" id="mside"></div></div>
+</section>
+</main></div>
+<div id="auth"><div class="authbox card" id="authbox"></div></div>
+<div id="ov"><div class="card" id="ovc"></div></div>
+<div id="msg"></div>
+
+<script src="vendor/supabase.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="geo.js"></script>
+<script>
+{
+const S={emp:{},alu:{},campos:[],aj:{fechaInicio:'',incluirTramite:true,criterio:'primeras'}};
+let db=null,selA=null,res=null;const M={mode:'alumno',sel:null,drag:false,focusE:null};
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ESTADOS={realiza:'Hará la FCT',pendiente:'Sin decidir',exencion:'Pedirá exención (experiencia laboral)',aplaza:'Trabajando: aplaza al próximo curso',baja:'Baja por inasistencia',no_apto:'No apto (PRL / rendimiento)',otro:'Otro motivo'};
+const TURNO_A={indiferente:'Indiferente',manana:'Mañana',tarde:'Tarde'};
+const TURNO_E={'':'Sin indicar',ambos:'Mañana y tarde',manana:'Solo mañana',tarde:'Solo tarde'};
+const SEG={'':'Sin contactar este curso',contactada:'Contactada, pendiente de respuesta',confirma:'Confirma plazas',rechaza:'No acepta alumnado este curso'};
+const CONC={si:'Vigente',tramite:'En trámite',no:'Sin concierto'};
+const COSTS={primeras:[0,1,2,3,4],equilibrado:[0,1,4,9,16]},NOASIG=60,BIG=1e6;
+const toast=t=>{const m=$('#msg');m.textContent=t;m.style.display='block';clearTimeout(m._t);m._t=setTimeout(()=>m.style.display='none',2600)};
+const fmtD=d=>d?d.split('-').reverse().join('/'):'';
+const refDate=()=>S.aj.fechaInicio||new Date().toISOString().slice(0,10);
+const empName=id=>S.emp[id]?`${S.emp[id].n} · ${S.emp[id].nombre}`:'';
+const sortedEmp=()=>Object.entries(S.emp).sort((a,b)=>(a[1].n||999)-(b[1].n||999));
+const sortedAlu=()=>Object.entries(S.alu).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre));
+
+function conc(e){ // estado efectivo del concierto
+  if(e.concierto==='si'){if(e.caducidad&&e.caducidad<refDate())return'cad';return'si'}
+  return e.concierto||'no'}
+function concTag(e){const c=conc(e);
+  if(c==='si')return`<span class="tag ok">Vigente${e.caducidad?' hasta '+fmtD(e.caducidad):''}</span>`;
+  if(c==='cad')return`<span class="tag bad">Caducado ${fmtD(e.caducidad)}</span>`;
+  if(c==='tramite')return'<span class="tag wa">En trámite</span>';return'<span class="tag bad">Sin concierto</span>'}
+function cap(e){return e.plazas==null||e.plazas===''?1:+e.plazas}
+function motivoNo(a,id){const e=S.emp[id];if(!e)return'empresa borrada';if(e.activa===false)return'desactivada'+(e.motivoInactiva?' ('+e.motivoInactiva+')':'');const c=conc(e);
+  if(c==='no')return'sin concierto';if(c==='cad')return'concierto caducado';if(c==='tramite'&&!S.aj.incluirTramite)return'concierto en trámite';
+  if(cap(e)<=0)return'0 plazas';
+  if(a.turno!=='indiferente'&&e.turno&&e.turno!=='ambos'&&e.turno!==a.turno)return'turno incompatible';return''}
+
+// ---------- guardado ----------
+const timers={},chains={};
+let pend=0,saveErr=false;function st(){const e=$('#saveSt');if(!e)return;e.className='save '+(saveErr?'err':pend?'busy':'ok');e.lastChild.textContent=saveErr?'Error al guardar':pend?'Guardando…':'Todo guardado'}
+function track(pr){pend++;st();return pr.then(()=>{saveErr=false},e=>{saveErr=true;toast('No se pudo guardar: '+(e.message||e.code))}).finally(()=>{pend--;st()})}
+function save(col,id){if(!db)return;const p=col+'/'+id;clearTimeout(timers[p]);
+  timers[p]=setTimeout(()=>{const data=col==='empresas'?S.emp[id]:S.alu[id];if(!data)return;
+    const body=JSON.parse(JSON.stringify(data));
+    chains[p]=(chains[p]||Promise.resolve()).then(()=>track(db.doc(p).set(body)))},500)}
+function saveCfg(name,body){db&&track(db.doc('config/'+name).set(JSON.parse(JSON.stringify(body))))}
+async function del(col,id){if(col==='empresas')delete S.emp[id];else delete S.alu[id];render();if(db)await db.doc(col+'/'+id).delete().catch(()=>{})}
+
+// ---------- asignación (método húngaro) ----------
+function hungarian(a){const n=a.length,m=a[0].length,u=Array(n+1).fill(0),v=Array(m+1).fill(0),p=Array(m+1).fill(0),way=Array(m+1).fill(0);
+  for(let i=1;i<=n;i++){p[0]=i;let j0=0;const minv=Array(m+1).fill(Infinity),used=Array(m+1).fill(false);
+    do{used[j0]=true;const i0=p[j0];let d=Infinity,j1=0;
+      for(let j=1;j<=m;j++)if(!used[j]){const cur=a[i0-1][j-1]-u[i0]-v[j];if(cur<minv[j]){minv[j]=cur;way[j]=j0}if(minv[j]<d){d=minv[j];j1=j}}
+      for(let j=0;j<=m;j++)if(used[j]){u[p[j]]+=d;v[j]-=d}else minv[j]-=d;j0=j1}while(p[j0]!==0);
+    do{const j1=way[j0];p[j0]=p[j1];j0=j1}while(j0)}
+  const r=Array(n).fill(-1);for(let j=1;j<=m;j++)if(p[j])r[p[j]-1]=j-1;return r}
+function asignar(){const out={},libre={};
+  for(const[id,e]of Object.entries(S.emp))libre[id]=cap(e);
+  const act=sortedAlu().filter(([,a])=>a.estado==='realiza');
+  for(const[id,a]of act)if(a.fijada&&S.emp[a.fijada]){out[id]={emp:a.fijada,manual:true};libre[a.fijada]--}
+  const rest=act.filter(([id])=>!out[id]);const slots=[];
+  for(const[id,e]of Object.entries(S.emp))for(let k=0;k<libre[id];k++)slots.push(id);
+  if(rest.length){const M=rest.map(([,a],i)=>{const row=slots.map(eid=>{const r=(a.prefs||[]).indexOf(eid);return r<0||motivoNo(a,eid)?BIG:(COSTS[S.aj.criterio]||COSTS.primeras)[r]});
+      for(let k=0;k<rest.length;k++)row.push(NOASIG);return row});
+    const r=hungarian(M);
+    rest.forEach(([id],i)=>{const j=r[i];out[id]=j>=0&&j<slots.length&&M[i][j]<BIG?{emp:slots[j],manual:false}:{emp:'',manual:false}})}
+  for(const id in out){const a=S.alu[id];out[id].rank=out[id].emp?(a.prefs||[]).indexOf(out[id].emp):-1}
+  return out}
+
+// ---------- render ----------
+function render(){res=asignar();renderKpis();renderListA();renderEdA();renderRes();renderEmp()}
+function renderKpis(){const al=Object.values(S.alu),act=al.filter(a=>a.estado==='realiza'),r=Object.entries(res);
+  const sinPref=act.filter(a=>!(a.prefs||[]).length).length,sin=r.filter(([id,x])=>!x.emp&&(S.alu[id].prefs||[]).length).length,uno=r.filter(([,x])=>x.rank===0).length;
+  const disp=demanda().filter(d=>d.fuera.length).length;
+  const K=[['c-b',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .6 3.2 2.3 3.5 5.2"/></svg>`,act.length+' / '+al.length,'harán la FCT'],['c-g',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3 2.7 5.6 6.1.8-4.5 4.3 1.1 6.1L12 16.9l-5.4 2.9 1.1-6.1-4.5-4.3 6.1-.8z"/></svg>`,uno,'en su 1ª opción'],[sin?'c-r':'c-g',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>`,sin,'con preferencias y sin plaza'],[sinPref?'c-a':'c-g',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></svg>`,sinPref,'aún sin preferencias'],[disp?'c-p':'c-g',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 21V9l8-5 8 5v12z"/><path d="M12 21v-6"/><path d="M8 11h.01M16 11h.01"/></svg>`,disp,'empresas disputadas']];
+  $('#kpis').innerHTML=K.map(([c,ic,b,t])=>`<div class="kpi"><div class="ic ${c}">${ic}</div><div class="t"><b>${b}</b><span>${t}</span></div></div>`).join('');
+  const nav=(id,v,cl)=>{const e=$(id);e.textContent=v||'';e.className=v?cl:''};
+  nav('#bA',sinPref,'w');nav('#bR',avisos().length,'r');nav('#bE',Object.values(S.emp).filter(e=>e.activa!==false).length,'');
+  st()}
+
+function renderListA(){const q=$('#qa').value.toLowerCase();
+  $('#listA').innerHTML=sortedAlu().filter(([,a])=>a.nombre.toLowerCase().includes(q)).map(([id,a])=>{
+    const np=(a.prefs||[]).length;const t=a.estado!=='realiza'?`<span class="tag bad">${esc(ESTADOS[a.estado]?.split(' ')[0]||a.estado)}</span>`:np?`<span class="tag ok">${np} pref.</span>`:'<span class="tag wa">Sin pref.</span>';
+    return`<div class="li${id===selA?' sel':''}" data-a="${id}"><div>${esc(a.nombre)}<br><small>${esc(a.municipio||a.zona)}</small></div>${t}</div>`}).join('')||'<div class="empty">Ningún alumno</div>'}
+
+function empOptions(sel,a){return'<option value="">—</option>'+sortedEmp().map(([id,e])=>{const m=a?motivoNo(a,id):'';
+  return`<option value="${id}"${id===sel?' selected':''}>${esc(e.n+' · '+e.nombre)}${m?' ⚠ '+m:''}</option>`}).join('')}
+
+function renderEdA(){const box=$('#edA');if(box.contains(document.activeElement)&&box._id===selA)return;box._id=selA;
+  const a=S.alu[selA];if(!a){box.innerHTML='<div class="card empty">Elige un alumno de la lista para ver y editar su ficha y sus preferencias.</div>';return}
+  const r=res[selA];
+  const info=a.estado!=='realiza'?'No entra en el reparto.':r?.emp?`Asignación actual: <b>${esc(empName(r.emp))}</b> ${r.manual?'(fijada a mano)':r.rank>=0?`(${r.rank+1}ª opción)`:''}`:'Sin empresa en el reparto actual.';
+  box.innerHTML=`<div class="card"><h2>${esc(a.nombre)}</h2><p class="info">${info}</p>
+  <div class="grid">
+  <label>Apellidos, nombre<input data-f="nombre" value="${esc(a.nombre)}"></label>
+  <label>Municipio<input data-f="municipio" value="${esc(a.municipio)}"></label>
+  <label>Email<input data-f="email" value="${esc(a.email)}"></label>
+  <label>Email personal<input data-f="email2" value="${esc(a.email2)}"></label>
+  <label>¿Hará la FCT este curso?<select data-f="estado">${Object.entries(ESTADOS).map(([k,v])=>`<option value="${k}"${k===a.estado?' selected':''}>${v}</option>`).join('')}</select></label>
+  <label>Motivo / detalle<input data-f="motivo" value="${esc(a.motivo)}"></label>
+  <label>Turno preferido<select data-f="turno">${Object.entries(TURNO_A).map(([k,v])=>`<option value="${k}"${k===a.turno?' selected':''}>${v}</option>`).join('')}</select></label>
+  </div>
+  <h3>Preferencias de empresa (por orden)</h3><div class="prefs">${[0,1,2,3,4].map(i=>{const id=(a.prefs||[])[i]||'';const m=id?motivoNo(a,id):'';
+    return`<div class="pref"><b>${i+1}</b><div><select data-p="${i}" aria-label="Preferencia ${i+1}">${empOptions(id,a)}</select>${m?`<p class="note bad">No se puede asignar: ${m}</p>`:''}</div></div>`}).join('')}</div>
+  <h3>Dirección</h3><input data-f="direccion" value="${esc(a.direccion)}" aria-label="Dirección"><div class="geo">${geoTxt(a.geo)}<button class="ghost" data-vermap="a:${selA}">Ver en el mapa</button></div>
+  <h3>Notas</h3><textarea data-f="notas" aria-label="Notas">${esc(a.notas)}</textarea>
+  <div class="row" style="margin-top:16px"><button class="danger" id="delA">Eliminar alumno</button></div></div>`}
+
+function demanda(){const d={};const act=Object.entries(S.alu).filter(([,a])=>a.estado==='realiza');
+  for(const[,a]of act)(a.prefs||[]).forEach((id,i)=>{if(!S.emp[id])return;(d[id]??={id,r:[0,0,0,0,0],pide:0,asig:0}).r[i]++;d[id].pide++});
+  for(const x of Object.values(res||{}))if(x.emp){(d[x.emp]??={id:x.emp,r:[0,0,0,0,0],pide:0,asig:0}).asig++}
+  for(const x of Object.values(d))x.fuera=[];
+  for(const[id,a]of act){const r=(res||{})[id];if(!r||r.manual)continue;const lim=r.emp&&r.rank>=0?r.rank:(a.prefs||[]).length;
+    (a.prefs||[]).slice(0,lim).forEach(eid=>{if(d[eid]&&!motivoNo(a,eid))d[eid].fuera.push(a.nombre)})}
+  return Object.values(d).map(x=>({...x,cap:cap(S.emp[x.id]),e:S.emp[x.id]})).sort((a,b)=>b.fuera.length-a.fuera.length||b.pide-a.pide)}
+
+function avisos(){const rows=sortedAlu().filter(([,a])=>a.estado==='realiza'),dm=demanda();const av=[];for(const[id,a]of rows){(a.prefs||[]).forEach((eid,i)=>{const m=motivoNo(a,eid);if(m)av.push(`<b>${esc(a.nombre)}</b>: su ${i+1}ª opción (${esc(empName(eid))}) no es asignable — ${m}.`)});
+    if(a.fijada&&res[id]&&S.emp[a.fijada]){const m=motivoNo(a,a.fijada);if(m)av.push(`<b>${esc(a.nombre)}</b> está fijado en ${esc(empName(a.fijada))}, que tiene: ${m}.`)}}
+  for(const d of dm)if(d.asig>d.cap)av.push(`<b>${esc(d.e.nombre)}</b> tiene ${d.asig} alumnos fijados y ${d.cap} plaza(s).`);
+  return av}
+function renderRes(){const rows=sortedAlu().filter(([,a])=>a.estado==='realiza');
+  $('#tRes').innerHTML='<thead><tr><th>Alumno</th><th>Empresa</th><th>Opción</th><th>Ajuste manual</th></tr></thead><tbody>'+rows.map(([id,a])=>{const r=res[id]||{};
+    const op=!r.emp?(a.prefs?.length?'<span class="tag bad">Sin plaza</span>':'<span class="tag wa">Sin preferencias</span>'):r.rank<0?'<span class="tag wa">Fuera de sus opciones</span>':`<span class="tag${r.rank===0?' ok':''}">${r.rank+1}ª</span>`;
+    return`<tr><td>${esc(a.nombre)}</td><td>${r.emp?esc(empName(r.emp)):'—'}</td><td>${op}</td><td><select data-fix="${id}" aria-label="Fijar empresa"><option value="">Automático</option>${sortedEmp().map(([eid,e])=>`<option value="${eid}"${eid===a.fijada?' selected':''}>Fijar en ${esc(e.n+' · '+e.nombre)}</option>`).join('')}</select></td></tr>`}).join('')+'</tbody>';
+  const dm=demanda();const col=['#0f7b0f','#6ccb5f','#f7c948','#f08a4b','#c42b1c'];
+  $('#tDem').innerHTML=dm.length?'<thead><tr><th>Empresa</th><th>Concierto</th><th class="n">Plazas</th><th class="n">Le piden</th><th>1ª · 2ª · 3ª · 4ª · 5ª</th><th class="n">Asignados</th><th>Situación</th></tr></thead><tbody>'+dm.map(d=>`<tr class="click" data-e="${d.id}"><td>${esc(d.e.n+' · '+d.e.nombre)}</td><td>${concTag(d.e)}</td><td class="n">${d.e.plazas==null||d.e.plazas===''?'1 <small>(sin confirmar)</small>':d.cap}</td><td class="n">${d.pide}</td><td><div class="row" style="gap:6px"><div class="bars">${d.r.map((c,i)=>`<i style="width:${d.pide?c/d.pide*100:0}%;background:${col[i]}"></i>`).join('')}</div><small>${d.r.join(' · ')}</small></div></td><td class="n">${d.asig}</td><td>${d.asig>d.cap?'<span class="tag bad">Sobrecupo</span>':d.fuera.length?`<span class="tag wa" title="${esc(d.fuera.join(', '))}">Disputada · ${d.fuera.length} se queda${d.fuera.length>1?'n':''} fuera</span>`:motivoNo({turno:'indiferente'},d.id)?'<span class="tag bad">No asignable</span>':'<span class="tag ok">Sin conflicto</span>'}</td></tr>`).join('')+'</tbody>':'<tbody><tr><td class="empty">Aún no hay preferencias.</td></tr></tbody>';
+  const av=avisos();
+  $('#avisos').innerHTML=av.length?'<div class="card"><ul style="margin:0;padding-left:20px">'+av.map(x=>`<li>${x}</li>`).join('')+'</ul></div>':'<p class="note">Sin avisos.</p>';
+  $('#fIni').value=S.aj.fechaInicio||'';$('#incT').checked=!!S.aj.incluirTramite;$('#crit').value=S.aj.criterio||'primeras'}
+
+function renderEmp(){const q=$('#qe').value.toLowerCase(),f=$('#fe').value;const dm={};for(const d of demanda())dm[d.id]=d;
+  const rows=sortedEmp().filter(([,e])=>(!f||(f==='act'?e.activa!==false:f==='inact'?e.activa===false:conc(e)===f))&&JSON.stringify([e.nombre,e.municipio,e.contactos]).toLowerCase().includes(q));
+  $('#tEmp').innerHTML='<thead><tr><th>Activa</th><th class="n">Nº</th><th>Empresa</th><th>Municipio</th><th>Concierto</th><th class="n">Plazas</th><th>Turno</th><th>Contacto</th><th class="n">Le piden</th></tr></thead><tbody>'+rows.map(([id,e])=>{const c=(e.contactos||[])[0]||{};
+    return`<tr class="click${e.activa===false?' off':''}" data-e="${id}"><td><label class="sw" title="Activar o desactivar para este curso"><input type="checkbox" data-act="${id}"${e.activa===false?'':' checked'} aria-label="Activa"><i></i></label></td><td class="n">${esc(e.n)}</td><td>${esc(e.nombre)}${e.activa===false&&e.motivoInactiva?`<br><small class="note">${esc(e.motivoInactiva)}</small>`:''}</td><td>${esc(e.municipio)}</td><td>${concTag(e)}${e.seguimiento?`<br><span class="tag ${e.seguimiento==='confirma'?'ok':e.seguimiento==='rechaza'?'bad':''}" style="margin-top:4px;display:inline-block">${esc(SEG[e.seguimiento].split(',')[0])}</span>`:''}</td><td class="n">${e.plazas==null||e.plazas===''?'<small class="note">—</small>':esc(e.plazas)}</td><td class="nw">${e.turno?esc(TURNO_E[e.turno]):'<small class="note">—</small>'}</td><td>${esc([c.nombre,c.telefono].filter(Boolean).join(' · '))}${(e.contactos||[]).length>1?` <small>+${e.contactos.length-1}</small>`:''}</td><td class="n">${dm[id]?.pide||''}</td></tr>`}).join('')+'</tbody>'}
+
+// ---------- ficha de empresa (ventana) ----------
+let selE=null;
+function openE(id){selE=id;const e=S.emp[id];if(!e)return;
+  const f=(k,l,t='text')=>`<label>${l}<input type="${t}" data-ef="${k}" value="${esc(e[k]??'')}"></label>`;
+  $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(e.nombre||'Nueva empresa')}</h2><button class="sec" id="closeOv">Cerrar</button></div>
+  <div class="grid" style="margin-top:16px">${f('n','Nº','number')}${f('nombre','Nombre completo')}${f('nif','NIF')}${f('telefono','Teléfono general')}${f('municipio','Municipio')}${f('direccion','Dirección fiscal')}
+  <label>Concierto<select data-ef="concierto">${Object.entries(CONC).map(([k,v])=>`<option value="${k}"${k===e.concierto?' selected':''}>${v}</option>`).join('')}</select></label>
+  <label>Disponible este curso<select data-ef="activa"><option value="1"${e.activa!==false?' selected':''}>Sí, activa</option><option value="0"${e.activa===false?' selected':''}>No, desactivada</option></select></label>${f('motivoInactiva','Motivo si está desactivada')}${f('caducidad','Caduca el','date')}${f('plazas','Nº de alumnos que admite','number')}
+  <label>Turnos que ofrece<select data-ef="turno">${Object.entries(TURNO_E).map(([k,v])=>`<option value="${k}"${k===(e.turno||'')?' selected':''}>${v}</option>`).join('')}</select></label>
+  ${S.campos.map(c=>`<label>${esc(c.label)}<input data-ex="${esc(c.id)}" value="${esc(e.extra?.[c.id]??'')}"></label>`).join('')}</div>
+  <div class="geo">${geoTxt(e.geo)}<button class="ghost" data-vermap="e:${id}">Ver en el mapa</button></div>
+  <label style="margin-top:12px">Seguimiento con la empresa<select data-ef="seguimiento">${Object.entries(SEG).map(([k,v])=>`<option value="${k}"${k===(e.seguimiento||'')?' selected':''}>${v}</option>`).join('')}</select></label>
+  ${(()=>{const pid=sortedAlu().filter(([,a])=>a.estado==='realiza'&&(a.prefs||[]).includes(id));const asg=sortedAlu().filter(([aid])=>res[aid]?.emp===id);
+    return `<h3>Alumnado</h3><p class="note">Asignados: ${asg.length?asg.map(([,a])=>esc(a.nombre)).join(' · '):'ninguno'}</p><div class="mini" style="margin-top:8px">${pid.map(([,a])=>`<span class="tag">${a.prefs.indexOf(id)+1}ª · ${esc(a.nombre)}</span>`).join('')||'<span class="note">Ningún alumno la ha pedido.</span>'}</div>`})()}
+  <label style="margin-top:16px">Observaciones<textarea data-ef="observaciones">${esc(e.observaciones)}</textarea></label>
+  <h3>Personas de contacto y tutores de empresa</h3><div id="cts">${(e.contactos||[]).map((c,i)=>`<div class="contact">${['nombre','rol','telefono','email'].map(k=>`<label>${{nombre:'Nombre',rol:'Cargo / rol (p. ej. tutor)',telefono:'Teléfono',email:'Email'}[k]}<input data-c="${i}" data-ck="${k}" value="${esc(c[k])}"></label>`).join('')}<div style="align-self:end"><button class="sec" data-cdel="${i}">Quitar</button></div></div>`).join('')}</div>
+  <div class="row" style="margin-top:8px"><button class="sec" id="addC">+ Contacto</button><span style="flex:1"></span><button class="danger" id="delE">Eliminar empresa</button></div>`;
+  $('#ov').classList.add('on')}
+function openMsg(title,html,ok){$('#ovc').innerHTML=`<h2>${title}</h2>${html}<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="sec" id="closeOv">Cancelar</button><button id="okOv">Restaurar</button></div>`;$('#ov').classList.add('on');$('#okOv').onclick=()=>{$('#ov').classList.remove('on');ok()}}
+function closeE(){$('#ov').classList.remove('on');selE=null;render()}
+
+function openCampos(){$('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Campos personalizados</h2><button class="sec" id="closeOv">Cerrar</button></div>
+  <p class="note">Campos extra que aparecerán en la ficha de todas las empresas (p. ej. «Horario», «Web», «Persona que firma el concierto»).</p>
+  <div style="margin-top:12px">${S.campos.map((c,i)=>`<div class="row" style="margin-bottom:8px"><input data-cf="${i}" value="${esc(c.label)}" style="flex:1" aria-label="Nombre del campo"><button class="danger" data-cfdel="${i}">Borrar</button></div>`).join('')}</div>
+  <div class="row"><input id="newCampo" placeholder="Nombre del nuevo campo" style="flex:1"><button id="addCampo">Añadir</button></div>`;$('#ov').classList.add('on')}
+
+// ---------- eventos ----------
+document.addEventListener('input',ev=>{const t=ev.target;
+  if(t.id==='qa')return renderListA();if(t.id==='qe')return renderEmp();
+  if(t.dataset.f&&S.alu[selA]){S.alu[selA][t.dataset.f]=t.value;if(t.dataset.f==='direccion'||t.dataset.f==='municipio')S.alu[selA].geo=null;save('alumnos',selA);if(t.dataset.f==='nombre')renderListA()}
+  if(selE&&S.emp[selE]){const e=S.emp[selE];
+    if(t.dataset.ef){let v=t.value;if(t.dataset.ef==='activa')v=v==='1';if(t.dataset.ef==='plazas')v=v===''?null:+v;if(t.dataset.ef==='n')v=+v;e[t.dataset.ef]=v;if(t.dataset.ef==='direccion'||t.dataset.ef==='municipio')e.geo=null;save('empresas',selE)}
+    if(t.dataset.ex){(e.extra??={})[t.dataset.ex]=t.value;save('empresas',selE)}
+    if(t.dataset.c){e.contactos[+t.dataset.c][t.dataset.ck]=t.value;save('empresas',selE)}}
+  if(t.dataset.cf){S.campos[+t.dataset.cf].label=t.value;clearTimeout(t._t);t._t=setTimeout(()=>saveCfg('campos',{lista:S.campos}),600)}});
+document.addEventListener('change',async ev=>{const t=ev.target,a=S.alu[selA];
+  if(t.dataset.f&&a&&t.tagName==='SELECT'){t.blur();$('#edA')._id=null;render()}
+  if(t.dataset.p&&a){const p=[...(a.prefs||[])];while(p.length<5)p.push('');p[+t.dataset.p]=t.value;
+    const seen=new Set();a.prefs=p.filter(x=>x&&!seen.has(x)&&seen.add(x));save('alumnos',selA);$('#edA')._id=null;document.activeElement.blur();render()}
+  if(t.dataset.fix){S.alu[t.dataset.fix].fijada=t.value;save('alumnos',t.dataset.fix);render()}
+  if(t.id==='fIni'){S.aj.fechaInicio=t.value;saveCfg('ajustes',S.aj);render()}
+  if(t.id==='crit'){S.aj.criterio=t.value;saveCfg('ajustes',S.aj);render()}
+  if(t.id==='incT'){S.aj.incluirTramite=t.checked;saveCfg('ajustes',S.aj);render()}
+  if(t.id==='restFile'&&t.files[0]){let d;try{d=JSON.parse(await t.files[0].text())}catch{toast('Archivo no válido');return}t.value='';
+    if(!d.empresas||!d.alumnos){toast('No parece una copia de esta app');return}
+    openMsg('Restaurar copia',`<p>La copia es del ${esc((d.fecha||'').slice(0,10).split('-').reverse().join('/'))} y tiene ${Object.keys(d.empresas).length} empresas y ${Object.keys(d.alumnos).length} alumnos. Se sobrescribirán los datos actuales de esos registros.</p>`,async()=>{
+      Object.assign(S.emp,d.empresas);Object.assign(S.alu,d.alumnos);if(d.campos)S.campos=d.campos;if(d.ajustes)S.aj={...S.aj,...d.ajustes};render();
+      for(const id in d.empresas){await track(db.doc('empresas/'+id).set(d.empresas[id]))}for(const id in d.alumnos){await track(db.doc('alumnos/'+id).set(d.alumnos[id]))}
+      saveCfg('campos',{lista:S.campos});saveCfg('ajustes',S.aj);toast('Copia restaurada');await cargar();ubicar()});return}
+  if(t.id==='fe')renderEmp();
+  if(t.dataset.act){S.emp[t.dataset.act].activa=t.checked;save('empresas',t.dataset.act);render()}
+  if(selE&&['concierto','turno','activa','seguimiento','plazas'].includes(t.dataset.ef))renderKpis()});
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-a],[data-e],button');if(!t)return;
+  if(t.dataset.vermap){const[k,id]=t.dataset.vermap.split(':');$('#ov').classList.remove('on');selE=null;if(k==='a'){M.mode='alumno';M.sel=id}else{M.focusE=id}location.hash='#mapa';if(location.hash==='#mapa')abrirMapa();return}
+  if(t.dataset.a){selA=t.dataset.a;renderListA();$('#edA')._id=null;renderEdA();if(innerWidth<860)$('#edA').scrollIntoView({behavior:'smooth'});return}
+  if(t.dataset.e&&t.tagName!=='BUTTON'){if(ev.target.closest('.sw'))return;openE(t.dataset.e);return}
+  if(t.id==='closeOv')return closeE();
+  if(t.id==='addA'){const id='a'+Date.now().toString(36);S.alu[id]={nombre:'NUEVO ALUMNO',zona:'',municipio:'',email:'',email2:'',direccion:'',estado:'realiza',motivo:'',turno:'indiferente',prefs:[],fijada:'',notas:''};selA=id;save('alumnos',id);$('#edA')._id=null;render();return}
+  if(t.id==='delA'){if(t.dataset.ok){del('alumnos',selA);selA=null}else{t.dataset.ok=1;t.textContent='Pulsa otra vez para confirmar'}return}
+  if(t.id==='addE'){const id='e'+Date.now().toString(36);const n=Math.max(0,...Object.values(S.emp).map(e=>+e.n||0))+1;
+    S.emp[id]={n,nombre:'',telefono:'',nif:'',direccion:'',municipio:'',concierto:'tramite',caducidad:'',plazas:null,turno:'',observaciones:'',contactos:[],extra:{}};save('empresas',id);openE(id);return}
+  if(t.id==='delE'){if(t.dataset.ok){const id=selE;$('#ov').classList.remove('on');selE=null;del('empresas',id)}else{t.dataset.ok=1;t.textContent='Pulsa otra vez para confirmar'}return}
+  if(t.id==='addC'){(S.emp[selE].contactos??=[]).push({nombre:'',rol:'',telefono:'',email:''});save('empresas',selE);openE(selE);return}
+  if(t.dataset.cdel){S.emp[selE].contactos.splice(+t.dataset.cdel,1);save('empresas',selE);openE(selE);return}
+  if(t.id==='freeze'||t.id==='unfreeze'){if(!t.dataset.ok){t.dataset.ok=1;const o=t.textContent;t.textContent='Pulsa otra vez para confirmar';setTimeout(()=>{t.textContent=o;delete t.dataset.ok},4000);return}
+    let n=0;for(const[id,a]of Object.entries(S.alu)){const v=t.id==='freeze'?(a.estado==='realiza'&&res[id]?.emp)||a.fijada:'';if(v!==a.fijada){a.fijada=v;save('alumnos',id);n++}}
+    delete t.dataset.ok;render();toast(t.id==='freeze'?n+' alumnos fijados':'Fijados quitados');return}
+  if(t.id==='restore'){$('#restFile').click();return}
+  if(t.id==='campos')return openCampos();
+  if(t.id==='backup'){bajar('FCT_1SEA_copia_'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({fecha:new Date().toISOString(),empresas:S.emp,alumnos:S.alu,campos:S.campos,ajustes:S.aj},null,1),'application/json');toast('Copia descargada');return}
+  if(t.id==='addCampo'){const v=$('#newCampo').value.trim();if(!v)return;S.campos.push({id:'c'+Date.now().toString(36),label:v});saveCfg('campos',{lista:S.campos});openCampos();return}
+  if(t.dataset.cfdel){S.campos.splice(+t.dataset.cfdel,1);saveCfg('campos',{lista:S.campos});openCampos();return}
+  if(t.id==='expCsv'||t.id==='cpy'){const sep=t.id==='cpy'?'\t':';';const q=v=>{v=String(v??'');return sep===';'&&/[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v.replace(/\t|\n/g,' ')};
+    const L=[['Alumno','Estado','Empresa','Opción','Turno alumno','Contacto empresa','Teléfono','Email contacto']];
+    for(const[id,a]of sortedAlu()){const r=res[id]||{},e=S.emp[r.emp],c=e?.contactos?.[0]||{};
+      L.push([a.nombre,ESTADOS[a.estado]+(a.motivo?' — '+a.motivo:''),e?e.nombre:'',r.emp?(r.manual&&r.rank<0?'manual':r.rank+1+'ª'):'',TURNO_A[a.turno],c.nombre,c.telefono||e?.telefono,c.email])}
+    const txt=L.map(r=>r.map(q).join(sep)).join('\r\n');
+    if(t.id==='cpy'){try{await navigator.clipboard.writeText(txt);toast('Copiado: pégalo en Excel')}catch{toast('No se pudo copiar')}return}
+    bajar('reparto_FCT_1SEA.csv','\ufeff'+txt,'text/csv;charset=utf-8')}});
+$('#ov').addEventListener('click',ev=>{if(ev.target.id==='ov')closeE()});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#ov').classList.contains('on'))closeE()});
+
+function route(){const h=(location.hash||'#alumnos').slice(1);const v=['alumnos','asignacion','empresas','mapa'].includes(h)?h:'alumnos';$('#kpis').style.display=v==='mapa'?'none':'';
+  document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+v));$('#ptitle').textContent={alumnos:'Alumnos',asignacion:'Asignación',empresas:'Empresas',mapa:'Mapa'}[v];$('#psub').textContent={alumnos:'Ficha de cada alumno: si hace la FCT, turno y sus preferencias de empresa.',asignacion:'Reparto automático según las preferencias, con ajustes manuales.',empresas:'Base de datos de empresas colaboradoras, conciertos y contactos.',mapa:'Dónde vive cada alumno y dónde están las empresas que ha pedido.'}[v];if(v==='mapa')setTimeout(abrirMapa,30)}
+addEventListener('hashchange',route);route();
+
+// ---------- utilidades ----------
+function bajar(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+function geoTxt(g){if(!g||!g.lat)return'<span>Sin ubicar en el mapa</span>';const P={portal:'portal exacto',calle:'calle',localidad:'barrio / localidad',municipio:'solo municipio (aprox.)',manual:'colocada a mano'};return`<span>Ubicación: ${P[g.precision]||g.precision}</span>`}
+
+// ---------- Supabase ----------
+const SB=supabase.createClient('https://gadcmpcfxwlroanjefxu.supabase.co','sb_publishable_PWKVfC18nVT8B2Vu2AZzzw_bm91RXc4',{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const chk=r=>{if(r.error)throw r.error;return r};
+db={doc:p=>{const[col,id]=p.split('/');return{set:d=>SB.from('docs').upsert({col,id,data:d}).then(chk),delete:()=>SB.from('docs').delete().eq('col',col).eq('id',id).then(chk)}}};
+const BRAND=$('.brand').outerHTML;
+function authView(v,msg=''){const b=$('#authbox');$('#auth').classList.add('on');const m=msg?`<p class="${msg.startsWith('✓')?'ok':'err'}">${esc(msg.replace(/^✓\s*/,''))}</p>`:'';
+  const F={
+  login:`<h2>Iniciar sesión</h2><form data-auth="login"><label>Email<input type="email" name="email" autocomplete="username" required></label><label>Contraseña<input type="password" name="pass" autocomplete="current-password" required></label>${m}<button type="submit">Entrar</button></form>
+    <div class="row" style="justify-content:space-between;margin-top:14px"><button class="linkb" data-av="signup">Crear cuenta</button><button class="linkb" data-av="forgot">¿Has olvidado la contraseña?</button></div>`,
+  signup:`<h2>Crear cuenta</h2><p class="note">Solo funcionará con el email autorizado en la base de datos.</p><form data-auth="signup"><label>Email<input type="email" name="email" autocomplete="username" required></label><label>Contraseña (mín. 10 caracteres)<input type="password" name="pass" minlength="10" autocomplete="new-password" required></label><label>Repite la contraseña<input type="password" name="pass2" minlength="10" autocomplete="new-password" required></label>${m}<button type="submit">Crear cuenta</button></form><p style="margin-top:14px"><button class="linkb" data-av="login">Volver a iniciar sesión</button></p>`,
+  forgot:`<h2>Recuperar contraseña</h2><form data-auth="forgot"><label>Email<input type="email" name="email" required></label>${m}<button type="submit">Enviar enlace</button></form><p style="margin-top:14px"><button class="linkb" data-av="login">Volver</button></p>`,
+  newpass:`<h2>Nueva contraseña</h2><form data-auth="newpass"><label>Nueva contraseña (mín. 10 caracteres)<input type="password" name="pass" minlength="10" autocomplete="new-password" required></label>${m}<button type="submit">Guardar</button></form>`,
+  mfa:`<h2>Verificación en dos pasos</h2><p class="note">Escribe el código de 6 cifras de tu app de autenticación.</p><form data-auth="mfa"><label>Código<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>${m}<button type="submit">Verificar</button></form><p style="margin-top:14px"><button class="linkb" data-av="out">Cerrar sesión</button></p>`,
+  denied:`<h2>Sin acceso</h2><p>Has iniciado sesión, pero esta cuenta no está autorizada para ver los datos.</p><p style="margin-top:14px"><button class="linkb" data-av="out">Cerrar sesión</button></p>`,
+  cargando:`<p class="note">Comprobando sesión…</p>`};
+  b.innerHTML=BRAND+F[v];b.querySelector('input')?.focus()}
+async function boot(){authView('cargando');
+  const{data:{session}}=await SB.auth.getSession();if(!session)return authView('login');
+  const{data:aal}=await SB.auth.mfa.getAuthenticatorAssuranceLevel();
+  if(aal&&aal.nextLevel==='aal2'&&aal.currentLevel!=='aal2')return authView('mfa');
+  const ok=await SB.rpc('es_permitido');if(!ok.data)return authView('denied');
+  $('#auth').classList.remove('on');$('#uMail').textContent=session.user.email;await cargar()}
+SB.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY')setTimeout(()=>authView('newpass'),0)});
+document.addEventListener('submit',async ev=>{const f=ev.target.closest('[data-auth]');if(!f)return;ev.preventDefault();const d=Object.fromEntries(new FormData(f));const btn=f.querySelector('button[type=submit]');btn.disabled=true;
+  const redir=location.origin+location.pathname;
+  try{switch(f.dataset.auth){
+    case'login':{const r=await SB.auth.signInWithPassword({email:d.email,password:d.pass});if(r.error)throw r.error;await boot();break}
+    case'signup':{if(d.pass!==d.pass2)throw new Error('Las contraseñas no coinciden');const r=await SB.auth.signUp({email:d.email,password:d.pass,options:{emailRedirectTo:redir}});if(r.error)throw r.error;authView('login','✓ Te hemos enviado un email para confirmar la cuenta. Ábrelo y después inicia sesión.');break}
+    case'forgot':{const r=await SB.auth.resetPasswordForEmail(d.email,{redirectTo:redir});if(r.error)throw r.error;authView('login','✓ Si el email existe, te llegará un enlace para cambiar la contraseña.');break}
+    case'newpass':{const r=await SB.auth.updateUser({password:d.pass});if(r.error)throw r.error;history.replaceState(null,'',redir);await boot();toast('Contraseña cambiada');break}
+    case'mfa':{const{data:fs}=await SB.auth.mfa.listFactors();const fa=(fs?.totp||[]).find(x=>x.status==='verified');const r=await SB.auth.mfa.challengeAndVerify({factorId:fa.id,code:d.code.trim()});if(r.error)throw r.error;await boot();break}}}
+  catch(e){const T={'Invalid login credentials':'Email o contraseña incorrectos','Email not confirmed':'Aún no has confirmado el email: revisa tu bandeja de entrada'};authView(f.dataset.auth,T[e.message]||e.message||String(e))}});
+document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-av],#logout,#secBtn,[data-mfa]');if(!t)return;
+  if(t.dataset.av==='out'||t.id==='logout'){await SB.auth.signOut();S.emp={};S.alu={};authView('login');return}
+  if(t.dataset.av)return authView(t.dataset.av);
+  if(t.id==='secBtn')return seguridad();
+  if(t.dataset.mfa==='on'){const{data:fs}=await SB.auth.mfa.listFactors();for(const x of(fs?.all||[]))if(x.status!=='verified')await SB.auth.mfa.unenroll({factorId:x.id});
+    const r=await SB.auth.mfa.enroll({factorType:'totp',friendlyName:'Móvil'});if(r.error)return toast(r.error.message);
+    $('#ovc').innerHTML=`<h2>Activar verificación en dos pasos</h2><p>1. Abre una app de autenticación (Google Authenticator, Microsoft Authenticator, Authy…) y escanea este código:</p><img class="qr" alt="Código QR" src="${esc(r.data.totp.qr_code)}"><p class="note" style="text-align:center">¿No puedes escanear? Clave: <code>${esc(r.data.totp.secret)}</code></p><p>2. Escribe el código de 6 cifras que te muestre la app:</p><div class="row"><input id="mfaCode" inputmode="numeric" maxlength="6" style="flex:1"><button data-mfa="verify" data-f2="${esc(r.data.id)}">Verificar</button></div><div class="row" style="justify-content:flex-end;margin-top:14px"><button class="sec" id="closeOv">Cancelar</button></div>`;return}
+  if(t.dataset.mfa==='verify'){const r=await SB.auth.mfa.challengeAndVerify({factorId:t.dataset.f2,code:$('#mfaCode').value.trim()});if(r.error)return toast('Código incorrecto, prueba otra vez');toast('Verificación en dos pasos activada');seguridad();return}
+  if(t.dataset.mfa==='off'){if(!t.dataset.ok){t.dataset.ok=1;t.textContent='Pulsa otra vez para confirmar';return}const r=await SB.auth.mfa.unenroll({factorId:t.dataset.f2});if(r.error)return toast(r.error.message);toast('Desactivada');seguridad()}});
+async function seguridad(){const{data:fs}=await SB.auth.mfa.listFactors();const v=(fs?.totp||[]).find(x=>x.status==='verified');
+  $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Seguridad</h2><button class="sec" id="closeOv">Cerrar</button></div>
+  <p>Sesión iniciada como <b>${esc($('#uMail').textContent)}</b>.</p>
+  <h3>Verificación en dos pasos</h3>${v?`<p><span class="tag ok">Activada</span> Al entrar se te pedirá un código de tu app de autenticación.</p><button class="danger" data-mfa="off" data-f2="${esc(v.id)}">Desactivar</button>`:`<p><span class="tag wa">Desactivada</span> Recomendado: además de la contraseña, pedirá un código del móvil al entrar.</p><button data-mfa="on">Activar</button>`}`;
+  $('#ov').classList.add('on')}
+
+// ---------- carga y sincronización ----------
+async function cargar(){$('#load').style.display='block';$('#load').textContent='Cargando datos…';
+  const r=await SB.from('docs').select('col,id,data').range(0,9999);if(r.error){$('#load').textContent='Error al leer datos: '+r.error.message;return}
+  S.emp={};S.alu={};for(const d of r.data){if(d.col==='empresas')S.emp[d.id]=d.data;else if(d.col==='alumnos')S.alu[d.id]=d.data;else if(d.col==='config'){if(d.id==='campos')S.campos=d.data.lista||[];if(d.id==='ajustes')S.aj={...S.aj,...d.data}}}
+  if(!r.data.length){$('#load').innerHTML='<div class="card" style="text-align:left"><h2>La base de datos está vacía</h2><p>Importa la copia de seguridad que descargaste de la versión anterior (archivo <code>FCT_1SEA_copia_….json</code>).</p><button id="restore">Importar copia</button></div>'}
+  else $('#load').style.display='none';
+  $('#edA')._id=null;render();if(location.hash==='#mapa')abrirMapa()}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!pend&&!$('#auth').classList.contains('on')&&!document.activeElement?.closest('#edA,#ovc'))cargar()});
+
+// ---------- mapa ----------
+let map=null,capa=null,osrmCache={};
+const RC=['#0f7b0f','#5fb34d','#e3a21a','#e8702a','#c42b1c'];
+const enLP=g=>g&&g.lat>28.4&&g.lat<28.9&&g.lng>-18.05&&g.lng<-17.6;
+const ini=n=>{const[ap,no]=(n||'').split(',');return((no||'').trim()[0]||'')+((ap||'').trim()[0]||'')};
+const km=(a,b)=>{const R=6371,dl=(b.lat-a.lat)*Math.PI/180,dg=(b.lng-a.lng)*Math.PI/180,x=Math.sin(dl/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dg/2)**2;return 2*R*Math.asin(Math.sqrt(x))};
+function abrirMapa(){if(!window.L)return;
+  if(!map){map=L.map('map',{zoomSnap:.5}).setView([28.67,-17.86],10.5);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>');
+    capa=L.layerGroup().addTo(map)}
+  setTimeout(()=>map.invalidateSize(),50);
+  if(!M.sel){const c=sortedAlu().find(([,a])=>a.estado==='realiza'&&(a.prefs||[]).length);if(c)M.sel=c[0]}
+  dibujarMapa(true);if(pendientesGeo().length&&!ubicando)ubicar()}
+const icon=(html,cls,s)=>L.divIcon({html,className:cls||'',iconSize:[s,s],iconAnchor:[s/2,s/2],popupAnchor:[0,-s/2]});
+function popupE(id,extra=''){const e=S.emp[id];const asg=sortedAlu().filter(([aid])=>res[aid]?.emp===id).map(([,a])=>esc(a.nombre));
+  return`<b>${esc(e.n+' · '+e.nombre)}</b><br>${concTag(e)} ${e.activa===false?'<span class="tag bad">Desactivada</span>':''}<br>Plazas: ${e.plazas??'sin confirmar'} · ${esc(e.municipio||'')}${extra}${asg.length?'<br>Asignados: '+asg.join(', '):''}<br><button class="ghost" style="margin-top:6px" data-e="${id}">Abrir ficha</button>`}
+function marcador(g,ic,drag,onDrag){const m=L.marker([g.lat,g.lng],{icon:ic,draggable:!!drag,autoPan:true});if(drag)m.on('dragend',()=>{const p=m.getLatLng();onDrag({lat:p.lat,lng:p.lng,precision:'manual',fuente:'manual'})});return m}
+function setGeo(col,id,g){const o=col==='empresas'?S.emp[id]:S.alu[id];o.geo=g;save(col,id);toast('Ubicación guardada')}
+function dibujarMapa(fit){if(!map)return;capa.clearLayers();osrmPend=null;
+  const emps=sortedEmp().filter(([,e])=>enLP(e.geo));const pts=[];
+  if(M.mode==='alumno'&&S.alu[M.sel]){const id=M.sel,a=S.alu[id],prefs=a.prefs||[],asg=res[id]?.emp,ag=a.geo;
+    for(const[eid,e]of emps){if(prefs.includes(eid)||eid===asg)continue;const off=e.activa===false||!!motivoNo(a,eid);
+      marcador(e.geo,icon('',`mk-d${off?' off':''}`,12),M.drag,g=>setGeo('empresas',eid,g)).bindPopup(()=>popupE(eid)).addTo(capa)}
+    const lista=[...prefs];if(asg&&!lista.includes(asg))lista.push(asg);
+    lista.forEach(eid=>{const e=S.emp[eid];if(!e||!enLP(e.geo))return;const r=prefs.indexOf(eid),col=r>=0?RC[r]:'#005fb8',isA=eid===asg;
+      if(enLP(ag))L.polyline([[ag.lat,ag.lng],[e.geo.lat,e.geo.lng]],{color:isA?'#005fb8':col,weight:isA?5:2.5,opacity:isA?.9:.75,dashArray:isA?null:'6 7'}).addTo(capa);
+      const mk=marcador(e.geo,icon(r>=0?r+1:'★',`mk-p${isA?' asig':''}`,28),M.drag,g=>setGeo('empresas',eid,g)).bindPopup(()=>popupE(eid,enLP(ag)?`<br>${km(ag,e.geo).toFixed(1)} km en línea recta`:'')).addTo(capa);
+      const el=mk.getElement();if(el)el.style.background=col;
+      pts.push([e.geo.lat,e.geo.lng])});
+    if(enLP(ag)){marcador(ag,icon(esc(ini(a.nombre)),'mk-al',34),M.drag,g=>setGeo('alumnos',id,g)).bindPopup(`<b>${esc(a.nombre)}</b><br>${esc(a.municipio||'')}<br>${geoTxt(ag)}`).setZIndexOffset(1000).addTo(capa);pts.push([ag.lat,ag.lng])}
+    if(fit&&pts.length)map.fitBounds(pts,{padding:[50,50],maxZoom:14});
+    if(enLP(ag))tiempos(id)}
+  else{const act=sortedAlu().filter(([,a])=>a.estado==='realiza');const dem={};for(const d of demanda())dem[d.id]=d;
+    for(const[eid,e]of emps){const d=dem[eid];if(!d){marcador(e.geo,icon('',`mk-d${e.activa===false||motivoNo({turno:'indiferente'},eid)?' off':''}`,12),M.drag,g=>setGeo('empresas',eid,g)).bindPopup(()=>popupE(eid)).addTo(capa);continue}
+      const s=Math.min(40,18+d.pide*4);marcador(e.geo,icon(d.pide,'mk-g',s),M.drag,g=>setGeo('empresas',eid,g)).bindPopup(()=>popupE(eid,`<br>La piden ${d.pide} alumno(s)`)).addTo(capa)}
+    for(const[id,a]of act){if(!enLP(a.geo))continue;const r=res[id];const e=r?.emp&&S.emp[r.emp];
+      if(e&&enLP(e.geo))L.polyline([[a.geo.lat,a.geo.lng],[e.geo.lat,e.geo.lng]],{color:r.rank>=0?RC[r.rank]:'#005fb8',weight:3,opacity:.85}).addTo(capa);
+      marcador(a.geo,icon(esc(ini(a.nombre)),`mk-al s${r?.emp?'':' off'}`,26),M.drag,g=>setGeo('alumnos',id,g)).on('click',()=>{if(!M.drag){M.mode='alumno';M.sel=id;dibujarMapa(true);panel()}}).setZIndexOffset(1000).bindTooltip(esc(a.nombre)).addTo(capa);pts.push([a.geo.lat,a.geo.lng])}
+    if(fit)map.setView([28.67,-17.86],10.5)}
+  if(M.focusE&&S.emp[M.focusE]){const e=S.emp[M.focusE];if(enLP(e.geo)){map.setView([e.geo.lat,e.geo.lng],15);L.popup().setLatLng([e.geo.lat,e.geo.lng]).setContent(popupE(M.focusE)).openOn(map)}else toast('Esa empresa no está ubicada en La Palma');M.focusE=null}
+  $('#map').classList.toggle('drag',M.drag);panel()}
+let osrmPend=null;
+async function tiempos(id){const a=S.alu[id];const ids=(a.prefs||[]).filter(e=>S.emp[e]&&enLP(S.emp[e].geo));const asg=res[id]?.emp;if(asg&&!ids.includes(asg)&&enLP(S.emp[asg]?.geo))ids.push(asg);if(!ids.length)return;
+  const key=id+JSON.stringify(a.geo)+ids.map(e=>e+JSON.stringify(S.emp[e].geo)).join();if(osrmCache[key]){panel();return}
+  const q=[a.geo,...ids.map(e=>S.emp[e].geo)].map(g=>g.lng.toFixed(5)+','+g.lat.toFixed(5)).join(';');osrmPend=key;
+  try{const r=await(await fetch(`https://router.project-osrm.org/table/v1/driving/${q}?sources=0&annotations=duration,distance`)).json();
+    if(r.code==='Ok'){const o={};ids.forEach((e,i)=>o[e]={min:r.durations[0][i+1]/60,km:r.distances[0][i+1]/1000});osrmCache[key]=o}}catch{}
+  if(osrmPend===key)panel()}
+function tiempoDe(id,eid){const a=S.alu[id];for(const k in osrmCache)if(k.startsWith(id+JSON.stringify(a.geo))&&osrmCache[k][eid])return osrmCache[k][eid];return null}
+function pendientesGeo(){const r=[];for(const[id,a]of Object.entries(S.alu))if(!a.geo&&a.direccion&&!a.geoFallo)r.push(['alumnos',id]);for(const[id,e]of Object.entries(S.emp))if(!e.geo&&(e.direccion||e.municipio)&&!e.geoFallo)r.push(['empresas',id]);return r}
+let ubicando=false;
+async function ubicar(todos){if(ubicando)return;ubicando=true;
+  if(todos){for(const a of Object.values(S.alu))delete a.geoFallo;for(const e of Object.values(S.emp))delete e.geoFallo}
+  const P=pendientesGeo();let n=0;
+  for(const[col,id]of P){n++;const prog=$('#geoProg');if(prog)prog.textContent=`Ubicando direcciones… ${n}/${P.length}`;
+    const o=col==='alumnos'?S.alu[id]:S.emp[id];if(!o)continue;const Lm=col==='alumnos'?GEO.limpiaAlumno(o.direccion):GEO.limpiaEmpresa(o);
+    let g=null;try{g=await GEO.geocode(Lm)}catch{}
+    if(g){o.geo={lat:g.lat,lng:g.lng,precision:g.precision,fuente:g.fuente}}else o.geoFallo=true;save(col,id)}
+  ubicando=false;if(P.length){toast(`Direcciones ubicadas: ${P.length}`);dibujarMapa(false)}else panel()}
+function panel(){const box=$('#mside');if(!box)return;const al=sortedAlu().filter(([,a])=>a.estado==='realiza');
+  const fuera=[...sortedAlu().filter(([,a])=>a.estado==='realiza'&&a.geo&&!enLP(a.geo)).map(([,a])=>'Alumno: '+a.nombre),...sortedEmp().filter(([,e])=>e.geo&&!enLP(e.geo)).map(([,e])=>e.n+' · '+e.nombre+(e.municipio?' ('+e.municipio+')':''))];
+  const sinU=[...al.filter(([,a])=>!a.geo).map(([id,a])=>[`a:${id}`,a.nombre]),...sortedEmp().filter(([,e])=>!e.geo).map(([id,e])=>[`e:${id}`,e.n+' · '+e.nombre])];
+  let h=`<div class="seg"><button data-mm="alumno" class="${M.mode==='alumno'?'on':''}">Por alumno</button><button data-mm="grupo" class="${M.mode==='grupo'?'on':''}">Todo el grupo</button></div>`;
+  if(M.mode==='alumno'){const a=S.alu[M.sel];
+    h+=`<label>Alumno<select id="mSel">${al.map(([id,x])=>`<option value="${id}"${id===M.sel?' selected':''}>${esc(x.nombre)}${(x.prefs||[]).length?'':' (sin preferencias)'}</option>`).join('')}</select></label>`;
+    if(a){const r=res[M.sel];h+=`<p class="note" style="margin-top:10px">${a.geo?(enLP(a.geo)?geoTxt(a.geo):'Vive fuera de La Palma'):'Sin ubicar'} · ${r?.emp?'Asignado: <b>'+esc(empName(r.emp))+'</b>':'Sin empresa asignada'}</p>`;
+      const lista=[...(a.prefs||[])];if(r?.emp&&!lista.includes(r.emp))lista.push(r.emp);
+      h+='<div class="plist">'+(lista.map(eid=>{const e=S.emp[eid];if(!e)return'';const k=prefsIdx(a,eid),t=tiempoDe(M.sel,eid),m=motivoNo(a,eid);
+        const dist=t?`${Math.round(t.min)} min<br><small>${t.km.toFixed(1)} km</small>`:(enLP(a.geo)&&enLP(e.geo)?`<small>${km(a.geo,e.geo).toFixed(1)} km recta</small>`:'<small>—</small>');
+        return`<div class="pitem${eid===r?.emp?' asig':''}"><span class="dot" style="background:${k>=0?RC[k]:'#005fb8'}">${k>=0?k+1:'★'}</span><div><button class="linkb" data-fe="${eid}" style="text-align:left;color:var(--ink)">${esc(e.nombre)}</button><small>${esc(e.municipio||'')}${m?' · <span style="color:var(--bai)">'+esc(m)+'</span>':''}${!e.geo?' · sin ubicar':''}</small></div><div class="t">${dist}</div></div>`}).join('')||'<p class="note">Este alumno aún no tiene preferencias.</p>')+'</div><p class="note">Tiempos en coche aproximados (OSRM, sin tráfico).</p>'}}
+  else h+=`<p class="note">Cada alumno unido a la empresa que le ha tocado; el color indica qué opción era. Los círculos morados son empresas pedidas (el número, cuántos la piden). Pulsa un alumno para ver su detalle.</p>`;
+  h+=`<div class="legend">${RC.map((c,i)=>`<div><i class="dot" style="background:${c};width:14px;height:14px"></i>${i+1}ª opción</div>`).join('')}<div><i class="mk-d"></i>Otras empresas activas</div><div><i class="mk-d off"></i>Desactivadas o no asignables</div><div><i style="width:22px;height:4px;background:#005fb8;border-radius:2px"></i>Empresa asignada</div></div>`;
+  h+=`<h3>Ajustes del mapa</h3><label class="check"><input type="checkbox" id="mDrag"${M.drag?' checked':''}> Recolocar puntos arrastrándolos</label>
+    <div class="row" style="margin-top:8px"><button class="sec" id="geoAll">Volver a ubicar direcciones</button></div><p class="note" id="geoProg">${ubicando?'Ubicando direcciones…':''}</p>`;
+  if(fuera.length)h+=`<h3>Fuera de La Palma</h3><div class="mini">${fuera.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`;
+  if(sinU.length)h+=`<h3>Sin ubicar (${sinU.length})</h3><p class="note">No tienen dirección o no se encontró. Rellénala en su ficha o colócalos a mano.</p><div class="mini" style="margin-top:6px">${sinU.map(([k,n])=>`<button class="ghost" data-sinu="${k}">${esc(n)}</button>`).join('')}</div>`;
+  box.innerHTML=h;
+  const unl=pendientesGeo().length+sinU.length;const b=$('#bM');b.textContent=sinU.length||'';b.className=sinU.length?'w':''}
+const prefsIdx=(a,eid)=>(a.prefs||[]).indexOf(eid);
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-mm],[data-fe],#geoAll,[data-sinu]');if(!t)return;
+  if(t.dataset.mm){M.mode=t.dataset.mm;dibujarMapa(true)}
+  if(t.dataset.fe){const e=S.emp[t.dataset.fe];if(enLP(e.geo)){map.setView([e.geo.lat,e.geo.lng],15)}else openE(t.dataset.fe)}
+  if(t.id==='geoAll'){if(!t.dataset.ok){t.dataset.ok=1;t.textContent='Pulsa otra vez: se perderán las recolocaciones manuales';return}for(const o of[...Object.values(S.alu),...Object.values(S.emp)])o.geo=null;ubicar(true)}
+  if(t.dataset.sinu){const[k,id]=t.dataset.sinu.split(':');if(k==='a'){selA=id;location.hash='#alumnos';$('#edA')._id=null;render()}else openE(id)}});
+document.addEventListener('change',ev=>{if(ev.target.id==='mSel'){M.sel=ev.target.value;dibujarMapa(true)}if(ev.target.id==='mDrag'){M.drag=ev.target.checked;dibujarMapa(false);if(M.drag)toast('Arrastra cualquier punto a su sitio exacto; se guarda al soltarlo')}});
+const _render=render;render=function(){_render();if(map&&location.hash==='#mapa'&&!M.drag)dibujarMapa(false)};
+
+boot();
+
+}
+</script></body></html>
