@@ -118,7 +118,10 @@ button.ghost{background:transparent;color:var(--ink);border:1px solid var(--ctlb
 .kpi.alert b{color:inherit}
 td.nw{white-space:nowrap}
 .mini{display:flex;flex-wrap:wrap;gap:6px}
-@media(max-width:760px){nav{gap:2px}nav a{flex:1 1 0;flex-direction:column;gap:3px;justify-content:center;padding:6px 0;min-height:54px;font-size:10.5px;text-align:center}nav a span{flex:none;white-space:nowrap}nav svg{width:20px;height:20px}nav a.on::before{left:25%;right:25%}nav em{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.kpi{padding:10px 12px;gap:10px}.kpi .ic{width:32px;height:32px}.kpi .ic svg{width:17px;height:17px}.kpi b{font-size:20px;white-space:nowrap}.kpi span{font-size:11.5px;line-height:1.25;display:block}.ptitle{font-size:24px}.phead p{font-size:13px}.foot{margin-top:4px;padding:10px 4px 0;grid-template-columns:1fr;gap:8px}.foot>small{display:none}.user{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
+@media(max-width:760px){aside{padding:10px 12px 0}.brand{padding:4px 4px 8px;gap:10px}.brand .logo{width:34px;height:34px;border-radius:9px}.brand .logo svg{width:18px;height:18px}.brand b{font-size:16px}.brand>div:last-child{display:flex;align-items:center}.brand .chip{margin:0 0 0 8px}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);box-shadow:0 -1px 0 var(--line),0 -4px 16px rgba(0,0,0,.08);padding:4px 4px calc(4px + env(safe-area-inset-bottom));flex-direction:row;overflow:visible;gap:0}main{padding-bottom:96px}nav a.on{background:transparent}nav a.on::before{top:0;bottom:auto;height:3px}
+.foot{border:0;padding:0;margin:0}.foot>.row,.foot>.user{display:none}.foot.open>.user{display:grid}.foot.open>.row{display:flex}.save{cursor:pointer}.save::after{content:'· cuenta y copias';margin-left:2px;color:var(--ac)}.foot.open .save::after{content:'· ocultar'}
+.ptitle{margin-top:4px}nav a{flex:1 1 0;flex-direction:column;gap:3px;justify-content:center;padding:6px 0;min-height:54px;font-size:10.5px;text-align:center}nav a span{flex:none;white-space:nowrap}nav svg{width:20px;height:20px}nav a.on::before{left:25%;right:25%}nav em{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.kpi{padding:10px 12px;gap:10px}.kpi .ic{width:32px;height:32px}.kpi .ic svg{width:17px;height:17px}.kpi b{font-size:20px;white-space:nowrap}.kpi span{font-size:11.5px;line-height:1.25;display:block}.ptitle{font-size:24px}.phead p{font-size:13px}.foot{margin-top:4px;padding:10px 4px 0;grid-template-columns:1fr;gap:8px}.foot>small{display:none}.user{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
 
 .user{display:grid;gap:6px;font-size:12px;color:var(--mut)}.user span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #auth{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:16px;background:linear-gradient(165deg,var(--tint) 0,var(--bg) 70%)}
@@ -148,7 +151,14 @@ td.nw{white-space:nowrap}
 .leaflet-container{font:inherit}.leaflet-tile-pane{filter:saturate(.7) brightness(1.03)}.leaflet-popup-content{margin:12px 14px;font-size:13px;line-height:1.4}.leaflet-popup-content b{font-size:14px}
 .leaflet-popup-content-wrapper{border-radius:8px}
 .drag .leaflet-marker-icon{cursor:move}
-.sd{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:3px;background:var(--line);vertical-align:middle}.sd.ok{background:#0f7b0f}.sd.wa{background:#e3a21a}.sd.bad{background:#c42b1c}
+.segsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,280px));gap:8px;margin-bottom:12px}
+.calstrip{padding:14px 16px;margin-bottom:14px}.hitos{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.hito{background:var(--card2);border-radius:6px;padding:6px 8px;box-shadow:inset 0 0 0 1px var(--line)}.hito small{display:block;color:var(--mut);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hito b{font-size:14px}.hito.pas{opacity:.55}
+.scards{display:none;gap:8px}.scard{display:grid;gap:6px;text-align:left;width:100%;background:var(--card);color:var(--ink);border-radius:var(--r);box-shadow:var(--sh);padding:12px 14px;min-height:0;font-weight:400}.scard:hover{filter:none;background:var(--card2)}
+.sc-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.sc-top b{font-size:14px}
+.sc-row{display:flex;gap:10px;align-items:center;font-size:12px}.sc-row>span{width:46px;flex:none;color:var(--mut)}.sc-row .sd{width:12px;height:12px}
+@media(max-width:760px){.segtbl{display:none}.scards{display:grid}.hitos{grid-template-columns:repeat(3,minmax(0,1fr))}.segsum{grid-template-columns:1fr 1fr}}
+.sd{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:3px;background:light-dark(#d6d6d6,#555);vertical-align:middle}.sd.ok{background:#0f7b0f}.sd.wa{background:#e3a21a}.sd.bad{background:#c42b1c}
 .geo{font-size:12px;color:var(--mut);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 </style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
 <div class="app"><aside>
@@ -431,7 +441,7 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-a]
 $('#ov').addEventListener('click',ev=>{if(ev.target.id==='ov')closeE()});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#ov').classList.contains('on'))closeE()});
 
-function route(){const h=(location.hash||'#alumnos').slice(1);const v=['alumnos','asignacion','empresas','seguimiento','mapa'].includes(h)?h:'alumnos';$('#kpis').style.display=v==='mapa'?'none':'';
+function route(){const h=(location.hash||'#alumnos').slice(1);const v=['alumnos','asignacion','empresas','seguimiento','mapa'].includes(h)?h:'alumnos';$('#kpis').style.display=v==='mapa'||v==='seguimiento'?'none':'';
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
   document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+v));$('#ptitle').textContent={alumnos:'Alumnos',asignacion:'Asignación',empresas:'Empresas',seguimiento:'Seguimiento',mapa:'Mapa'}[v];$('#psub').textContent={alumnos:'Ficha de cada alumno: si hace la FCT, turno y sus preferencias de empresa.',asignacion:'Reparto automático según las preferencias, con ajustes manuales.',empresas:'Base de datos de empresas colaboradoras, conciertos y contactos.',seguimiento:'Horas, diarios, cuestionarios y contactos con las empresas durante las prácticas.',mapa:'Dónde vive cada alumno y dónde están las empresas que ha pedido.'}[v];if(v==='mapa')setTimeout(abrirMapa,30)}
 addEventListener('hashchange',route);route();
@@ -494,6 +504,7 @@ async function cargar(){$('#load').style.display='block';$('#load').textContent=
   if(!r.data.length){$('#load').innerHTML='<div class="card" style="text-align:left"><h2>La base de datos está vacía</h2><p>Importa la copia de seguridad que descargaste de la versión anterior (archivo <code>FCT_1SEA_copia_….json</code>).</p><button id="restore">Importar copia</button></div>'}
   else $('#load').style.display='none';
   $('#edA')._id=null;render();if(location.hash==='#mapa')abrirMapa()}
+document.addEventListener('click',ev=>{if(ev.target.closest('#saveSt')&&innerWidth<=760)$('.foot').classList.toggle('open')});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!pend&&!ubicando&&!$('#auth').classList.contains('on')&&!document.activeElement?.closest('#edA,#ovc'))cargar()});
 
 // ---------- mapa ----------
@@ -603,10 +614,24 @@ function segAvisos(){const av=[];const H=hitos();
 function horasObj(){return +S.aj.horasObjetivo||0}
 function renderSeg(){const box=$('#segBox');if(!box)return;const H=hitos();const rows=sortedAlu().filter(([,a])=>a.estado==='realiza');
   const dot=(st,t,lbl)=>`<i class="sd ${st}" title="${esc(lbl)}${t?': '+esc(t):''}"></i>`;
-  const hz=H.map(h=>`<span class="tag ${h.fecha&&h.fecha<hoyISO()?'':'wa'}" style="${h.fecha?'':'opacity:.6'}">${h.label}: ${h.fecha?fmtD(h.fecha):'sin fecha'}</span>`).join('');
+  
   const obj=horasObj();
-  box.innerHTML=`<div class="toolbar"><div class="mini" style="flex:1">${hz}</div><button class="sec" id="segCal">Calendario y horas</button><button class="sec" id="segCsv">Exportar CSV</button></div>
-  <div class="tbl scroll"><table class="stack"><thead><tr><th>Alumno</th><th>Empresa · tutor</th><th>Horas</th><th class="n">Por rellenar</th><th>Anexos</th><th>Cuestionarios alumno</th><th>Seguimiento tutor</th><th>Último contacto</th></tr></thead><tbody>
+  const avs=segAvisos(),hechos=rows.reduce((n,[,a])=>n+H.filter(h=>segDe(a).cuestA[h.id]).length,0),totQ=rows.length*H.length;
+  const sinFechas=H.every(h=>!h.fecha);
+  const cards=rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp];const hc=+s.horasConf||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
+    const pend=avs.filter(x=>x[0]===id).length;
+    return`<button class="scard" data-seg="${id}"><div class="sc-top"><b>${esc(a.nombre)}</b>${pend?`<span class="tag bad">${pend}</span>`:'<span class="tag ok">al día</span>'}</div>
+      <small class="note">${e?esc(e.nombre):'Sin empresa asignada'}</small>
+      <div class="sc-row"><span>Horas</span><div class="bars" style="flex:1;width:auto"><i style="width:${pct}%;background:${pct>=100?'#0f7b0f':'#005fb8'}"></i></div><small>${hc}${obj?' / '+obj:''} h</small></div>
+      <div class="sc-row"><span>Alumno</span><div>${H.map(h=>dot(estHito(s.cuestA[h.id],h),'',h.label)).join('')}</div>${+s.porRellenar?`<small style="color:var(--bai)">${s.porRellenar} d sin diario</small>`:''}</div>
+      <div class="sc-row"><span>Tutor</span><div>${H.map(h=>dot(estHito(s.cuestT[h.id]?.fecha,h),'',h.label)).join('')}</div><small class="note">${ult?'contacto '+fmtD(ult).slice(0,5):'sin contactos'}</small></div></button>`}).join('');
+  box.innerHTML=`<div class="segsum">
+    <div class="kpi"><div class="ic ${avs.length?'c-r':'c-g'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></svg></div><div class="t"><b>${avs.length}</b><span>cosas pendientes</span></div></div>
+    <div class="kpi"><div class="ic c-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div><div class="t"><b>${hechos} / ${totQ}</b><span>cuestionarios de alumnos hechos</span></div></div></div>
+  <div class="card calstrip"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>Calendario</b><button class="ghost" id="segCal">${sinFechas?'Poner fechas y horas':'Editar'}</button></div>
+    ${sinFechas?'<p class="note" style="margin:0">Aún no hay fechas límite. Ponlas para que la web te avise de lo que vence.</p>':`<div class="hitos">${H.map(h=>`<div class="hito ${h.fecha&&h.fecha<hoyISO()?'pas':''}"><small>${h.label.replace('Intermedio ','Int. ')}</small><b>${h.fecha?fmtD(h.fecha).slice(0,5):'—'}</b></div>`).join('')}</div>`}</div>
+  <div class="scards">${cards||'<p class="note">Ningún alumno hará la FCT todavía.</p>'}</div>
+  <div class="segtbl"><div class="tbl scroll"><table><thead><tr><th>Alumno</th><th>Empresa · tutor</th><th>Horas</th><th class="n">Por rellenar</th><th>Anexos</th><th>Cuestionarios alumno</th><th>Seguimiento tutor</th><th>Último contacto</th></tr></thead><tbody>
   ${rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp],tut=(e?.contactos||[]).find(c=>/tutor/i.test(c.rol))||(e?.contactos||[])[0];
     const hc=+s.horasConf||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
     return`<tr class="click" data-seg="${id}"><td>${esc(a.nombre)}</td><td>${e?esc(e.nombre):'<span class="note">sin asignar</span>'}${tut?.nombre?`<br><small class="note">${esc(tut.nombre)}</small>`:''}</td>
@@ -615,9 +640,10 @@ function renderSeg(){const box=$('#segBox');if(!box)return;const H=hitos();const
     <td class="nw"><span class="tag ${s.anexoI?'ok':''}">I</span> <span class="tag ${s.anexoII?'ok':''}">II</span></td>
     <td class="nw">${H.map(h=>dot(estHito(s.cuestA[h.id],h),s.cuestA[h.id]&&fmtD(s.cuestA[h.id]),h.label)).join('')}</td>
     <td class="nw">${H.map(h=>dot(estHito(s.cuestT[h.id]?.fecha,h),s.cuestT[h.id]?.fecha&&fmtD(s.cuestT[h.id].fecha),h.label)).join('')}</td>
-    <td class="nw">${ult?`${fmtD(ult)}<br><small class="note">hace ${diasEntre(ult,hoyISO())} días</small>`:'<small class="note">—</small>'}</td></tr>`}).join('')||'<tr><td class="empty">Ningún alumno hará la FCT todavía.</td></tr>'}</tbody></table></div>
+    <td class="nw">${ult?`${fmtD(ult)}<br><small class="note">hace ${diasEntre(ult,hoyISO())} días</small>`:'<small class="note">—</small>'}</td></tr>`}).join('')||'<tr><td class="empty">Ningún alumno hará la FCT todavía.</td></tr>'}</tbody></table></div></div>
   <div class="legend" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:10px 0 0"><div><i class="sd ok"></i>Hecho</div><div><i class="sd wa"></i>Vence en ≤ 7 días</div><div><i class="sd bad"></i>Vencido sin hacer</div><div><i class="sd"></i>Aún no toca</div></div>
-  <h2 class="sec-h">Pendiente</h2>${(()=>{const av=segAvisos();return av.length?'<div class="card"><ul style="margin:0;padding-left:20px">'+av.map(([id,t])=>`<li><button class="linkb" data-seg="${id}" style="color:var(--ink);text-align:left">${esc(t)}</button></li>`).join('')+'</ul></div>':'<p class="note">Nada pendiente.</p>'})()}`;
+  <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="sec" id="segCsv">Exportar CSV</button></div>
+  <h2 class="sec-h">Pendiente</h2>${(()=>{const av=avs;return av.length?'<div class="card"><ul style="margin:0;padding-left:20px">'+av.map(([id,t])=>`<li><button class="linkb" data-seg="${id}" style="color:var(--ink);text-align:left">${esc(t)}</button></li>`).join('')+'</ul></div>':'<p class="note">Nada pendiente.</p>'})()}`;
   const b=$('#bS');const n=segAvisos().length;b.textContent=n||'';b.className=n?'r':''}
 function openSeg(id){const a=S.alu[id];if(!a)return;const s=segDe(a),H=hitos(),r=res[id],e=r?.emp&&S.emp[r.emp];selSeg=id;
   const f=(k,l,t='number')=>`<label>${l}<input type="${t}" data-sg="${k}" value="${esc(s[k]??'')}"></label>`;
