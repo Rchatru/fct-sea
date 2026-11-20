@@ -118,7 +118,7 @@ button.ghost{background:transparent;color:var(--ink);border:1px solid var(--ctlb
 .kpi.alert b{color:inherit}
 td.nw{white-space:nowrap}
 .mini{display:flex;flex-wrap:wrap;gap:6px}
-@media(max-width:760px){.foot{display:none}nav em{display:none}}
+@media(max-width:760px){nav em{display:none}.foot{margin-top:4px;padding:10px 4px 0;grid-template-columns:1fr;gap:8px}.foot>small{display:none}.user{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
 
 .user{display:grid;gap:6px;font-size:12px;color:var(--mut)}.user span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #auth{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:16px;background:linear-gradient(165deg,var(--tint) 0,var(--bg) 70%)}
