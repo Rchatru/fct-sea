@@ -158,6 +158,19 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);box
 .sc-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.sc-top b{font-size:14px}
 .sc-row{display:flex;gap:10px;align-items:center;font-size:12px}.sc-row>span{width:46px;flex:none;color:var(--mut)}.sc-row .sd{width:12px;height:12px}
 @media(max-width:760px){.segtbl{display:none}.scards{display:grid}.hitos{grid-template-columns:repeat(3,minmax(0,1fr))}.segsum{grid-template-columns:1fr 1fr}}
+.mlist{display:none}.backA{display:none;margin-bottom:10px}
+.mi{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:10px 12px;display:grid;gap:4px}
+.mi-t{display:flex;gap:8px;align-items:center;justify-content:space-between}.mi-t b{font-size:13.5px;font-weight:600;line-height:1.3}
+.mi-s{font-size:12px;color:var(--mut);display:flex;gap:6px;align-items:center;flex-wrap:wrap}.mi.off{opacity:.55}
+.mi-sel{min-height:28px;font-size:12px;padding:2px 6px;margin:0;width:auto;max-width:42%;flex:none}
+.mi .tag{font-size:11px;padding:1px 7px}.mi{padding:8px 12px;gap:3px}.mi .sw{transform:scale(.85);transform-origin:left center;flex:none}
+details.howto{margin:0 0 4px}details.howto summary{cursor:pointer;color:var(--ac);font-size:13px;margin-bottom:6px}
+@media(max-width:760px){.kpis{display:flex;overflow-x:auto;scrollbar-width:none;gap:6px;margin:0 -16px 16px;padding:0 16px}.kpis::-webkit-scrollbar{display:none}.kpis .kpi{flex:0 0 auto;padding:8px 12px;gap:8px}.kpis .kpi .ic{width:28px;height:28px}.kpis .kpi b{font-size:17px}.kpis .kpi span{white-space:nowrap}.segsum .kpi span{white-space:normal}
+.phead p{display:none}.dk{display:none}.mlist{display:grid;gap:6px}.backA{display:inline-flex}
+#v-alumnos .split{gap:10px}#v-alumnos.det .split>div:first-child{display:none}#v-alumnos:not(.det) #edA{display:none}
+.list{max-height:none;padding:2px}.li{padding:8px 10px}.li small{font-size:11.5px}
+#v-alumnos .card{padding:16px}.grid{grid-template-columns:1fr 1fr;gap:10px}
+.toolbar{gap:8px}.toolbar label{flex:1 1 140px}#v-asignacion .toolbar button{flex:1 1 auto}.note.info{font-size:12px}}
 .sd{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:3px;background:light-dark(#d6d6d6,#555);vertical-align:middle}.sd.ok{background:#0f7b0f}.sd.wa{background:#e3a21a}.sd.bad{background:#c42b1c}
 .geo{font-size:12px;color:var(--mut);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 </style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
@@ -192,12 +205,12 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);box
 <label class="check"><input type="checkbox" id="incT"> Contar conciertos en trámite</label>
 <span style="flex:1"></span><button id="freeze" class="sec" title="Fija a cada alumno en la empresa que tiene ahora, para que nuevos cambios no lo muevan">Fijar reparto actual</button><button id="unfreeze" class="sec">Quitar fijados</button><button id="cpy" class="sec">Copiar para Excel</button><button id="expCsv">Exportar CSV</button>
 </div>
-<p class="note info">El reparto busca la combinación en la que el grupo, en conjunto, queda más cerca de sus primeras opciones. «Equilibrado» castiga mucho más bajar a la 3ª, 4ª o 5ª, así que prefiere que todos queden en 2ª antes que uno en 4ª. Los conciertos se comprueban a la fecha de inicio (o a hoy si no la pones). Fija un alumno en una empresa y el resto se recalcula.</p>
+<details class="howto"><summary>¿Cómo funciona el reparto?</summary><p class="note info">El reparto busca la combinación en la que el grupo, en conjunto, queda más cerca de sus primeras opciones. «Equilibrado» castiga mucho más bajar a la 3ª, 4ª o 5ª, así que prefiere que todos queden en 2ª antes que uno en 4ª. Los conciertos se comprueban a la fecha de inicio (o a hoy si no la pones). Fija un alumno en una empresa y el resto se recalcula.</p></details>
 <h2 class="sec-h">Reparto propuesto</h2>
-<div class="tbl scroll"><table class="stack" id="tRes"></table></div>
+<div class="tbl scroll dk"><table id="tRes"></table></div><div class="mlist" id="mRes"></div>
 <h2 class="sec-h">Demanda por empresa</h2>
 <p class="note" style="margin:-6px 0 12px">Solo empresas pedidas o con alumnado asignado. «Disputada» = está completa y algún alumno la tenía por delante de la que le ha tocado (pasa el ratón para ver quién). Las plazas sin confirmar cuentan como 1.</p>
-<div class="tbl scroll"><table class="stack" id="tDem"></table></div>
+<div class="tbl scroll dk"><table id="tDem"></table></div><div class="mlist" id="mDem"></div>
 <h2 class="sec-h">Avisos</h2>
 <div id="avisos"></div>
 </section>
@@ -208,7 +221,7 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);box
 <select id="fe" aria-label="Filtrar por concierto" style="width:auto;margin:0"><option value="">Todas</option><option value="act">Solo activas</option><option value="inact">Solo desactivadas</option><option value="si">Vigente</option><option value="tramite">En trámite</option><option value="no">Sin concierto</option><option value="cad">Caducado</option></select>
 <button id="campos" class="sec">Campos personalizados</button><button id="addE">Añadir empresa</button>
 </div>
-<div class="tbl scroll"><table class="stack" id="tEmp"></table></div>
+<div class="tbl scroll dk"><table id="tEmp"></table></div><div class="mlist" id="mEmp"></div>
 </section>
 <section class="view" id="v-seguimiento"><div id="segBox"></div></section>
 <section class="view" id="v-mapa">
@@ -311,7 +324,7 @@ function renderEdA(){const box=$('#edA');if(box.contains(document.activeElement)
   const a=S.alu[selA];if(!a){box.innerHTML='<div class="card empty">Elige un alumno de la lista para ver y editar su ficha y sus preferencias.</div>';return}
   const r=res[selA];
   const info=a.estado!=='realiza'?'No entra en el reparto.':r?.emp?`Asignación actual: <b>${esc(empName(r.emp))}</b> ${r.manual?'(fijada a mano)':r.rank>=0?`(${r.rank+1}ª opción)`:''}`:'Sin empresa en el reparto actual.';
-  box.innerHTML=`<div class="card"><h2>${esc(a.nombre)}</h2><p class="info">${info}</p>
+  box.innerHTML=`<button class="ghost backA" id="backA">← Todos los alumnos</button><div class="card"><h2>${esc(a.nombre)}</h2><p class="info">${info}</p>
   <div class="grid">
   <label>Apellidos, nombre<input data-f="nombre" value="${esc(a.nombre)}"></label>
   <label>Municipio<input data-f="municipio" value="${esc(a.municipio)}"></label>
@@ -343,7 +356,11 @@ function renderRes(){const rows=sortedAlu().filter(([,a])=>a.estado==='realiza')
   $('#tRes').innerHTML='<thead><tr><th>Alumno</th><th>Empresa</th><th>Opción</th><th>Ajuste manual</th></tr></thead><tbody>'+rows.map(([id,a])=>{const r=res[id]||{};
     const op=!r.emp?(a.prefs?.length?'<span class="tag bad">Sin plaza</span>':'<span class="tag wa">Sin preferencias</span>'):r.rank<0?'<span class="tag wa">Fuera de sus opciones</span>':`<span class="tag${r.rank===0?' ok':''}">${r.rank+1}ª</span>`;
     return`<tr><td>${esc(a.nombre)}</td><td>${r.emp?esc(empName(r.emp)):'—'}</td><td>${op}</td><td><select data-fix="${id}" aria-label="Fijar empresa"><option value="">Automático</option>${sortedEmp().map(([eid,e])=>`<option value="${eid}"${eid===a.fijada?' selected':''}>Fijar en ${esc(e.n+' · '+e.nombre)}</option>`).join('')}</select></td></tr>`}).join('')+'</tbody>';
+  $('#mRes').innerHTML=rows.map(([id,a])=>{const r=res[id]||{};const op=!r.emp?(a.prefs?.length?'<span class="tag bad">Sin plaza</span>':'<span class="tag wa">Sin pref.</span>'):r.rank<0?'<span class="tag wa">Manual</span>':`<span class="tag${r.rank===0?' ok':''}">${r.rank+1}ª</span>`;
+    return`<div class="mi"><div class="mi-t"><b>${esc(a.nombre)}</b>${op}</div><div class="mi-s"><span style="flex:1;min-width:0">${r.emp?esc(S.emp[r.emp]?.nombre||''):'—'}</span><select data-fix="${id}" class="mi-sel" aria-label="Fijar empresa"><option value="">${a.fijada?'Quitar fijado':'Auto'}</option>${sortedEmp().map(([eid,e])=>`<option value="${eid}"${eid===a.fijada?' selected':''}>Fijar en ${esc(e.n+' · '+e.nombre)}</option>`).join('')}</select></div></div>`}).join('');
   const dm=demanda();const col=['#0f7b0f','#6ccb5f','#f7c948','#f08a4b','#c42b1c'];
+  const sitT=d=>d.asig>d.cap?'<span class="tag bad">Sobrecupo</span>':d.fuera.length?`<span class="tag wa">Disputada · ${d.fuera.length} fuera</span>`:motivoNo({turno:'indiferente'},d.id)?'<span class="tag bad">No asignable</span>':'<span class="tag ok">Sin conflicto</span>';
+  $('#mDem').innerHTML=dm.map(d=>`<div class="mi click" data-e="${d.id}"><div class="mi-t"><b>${esc(d.e.n+' · '+d.e.nombre)}</b>${sitT(d)}</div><div class="mi-s"><div class="bars" style="width:70px">${d.r.map((c,i)=>`<i style="width:${d.pide?c/d.pide*100:0}%;background:${col[i]}"></i>`).join('')}</div> Piden ${d.pide} · asignados ${d.asig} · plazas ${d.e.plazas==null||d.e.plazas===''?'¿1?':d.cap}</div>${d.fuera.length?`<div class="mi-s">Fuera: ${esc(d.fuera.join(', '))}</div>`:''}</div>`).join('')||'<p class="note">Aún no hay preferencias.</p>';
   $('#tDem').innerHTML=dm.length?'<thead><tr><th>Empresa</th><th>Concierto</th><th class="n">Plazas</th><th class="n">Le piden</th><th>1ª · 2ª · 3ª · 4ª · 5ª</th><th class="n">Asignados</th><th>Situación</th></tr></thead><tbody>'+dm.map(d=>`<tr class="click" data-e="${d.id}"><td>${esc(d.e.n+' · '+d.e.nombre)}</td><td>${concTag(d.e)}</td><td class="n">${d.e.plazas==null||d.e.plazas===''?'1 <small>(sin confirmar)</small>':d.cap}</td><td class="n">${d.pide}</td><td><div class="row" style="gap:6px"><div class="bars">${d.r.map((c,i)=>`<i style="width:${d.pide?c/d.pide*100:0}%;background:${col[i]}"></i>`).join('')}</div><small>${d.r.join(' · ')}</small></div></td><td class="n">${d.asig}</td><td>${d.asig>d.cap?'<span class="tag bad">Sobrecupo</span>':d.fuera.length?`<span class="tag wa" title="${esc(d.fuera.join(', '))}">Disputada · ${d.fuera.length} se queda${d.fuera.length>1?'n':''} fuera</span>`:motivoNo({turno:'indiferente'},d.id)?'<span class="tag bad">No asignable</span>':'<span class="tag ok">Sin conflicto</span>'}</td></tr>`).join('')+'</tbody>':'<tbody><tr><td class="empty">Aún no hay preferencias.</td></tr></tbody>';
   const av=avisos();
   $('#avisos').innerHTML=av.length?'<div class="card"><ul style="margin:0;padding-left:20px">'+av.map(x=>`<li>${x}</li>`).join('')+'</ul></div>':'<p class="note">Sin avisos.</p>';
@@ -351,6 +368,8 @@ function renderRes(){const rows=sortedAlu().filter(([,a])=>a.estado==='realiza')
 
 function renderEmp(){const q=$('#qe').value.toLowerCase(),f=$('#fe').value;const dm={};for(const d of demanda())dm[d.id]=d;
   const rows=sortedEmp().filter(([,e])=>(!f||(f==='act'?e.activa!==false:f==='inact'?e.activa===false:conc(e)===f))&&JSON.stringify([e.nombre,e.municipio,e.contactos]).toLowerCase().includes(q));
+  $('#mEmp').innerHTML=rows.map(([id,e])=>{const c=(e.contactos||[])[0]||{};return`<div class="mi click${e.activa===false?' off':''}" data-e="${id}"><div class="mi-t"><label class="sw" title="Activa"><input type="checkbox" data-act="${id}"${e.activa===false?'':' checked'} aria-label="Activa"><i></i></label><b style="flex:1">${esc(e.n+' · '+e.nombre)}</b>${dm[id]?.pide?`<span class="tag">${dm[id].pide} pide${dm[id].pide>1?'n':''}</span>`:''}</div>
+    <div class="mi-s">${concTag(e)} ${e.seguimiento?`<span class="tag ${e.seguimiento==='confirma'?'ok':e.seguimiento==='rechaza'?'bad':''}">${esc(SEG[e.seguimiento].split(',')[0])}</span>`:''} ${esc(e.municipio||'')}${e.plazas!=null&&e.plazas!==''?' · '+esc(e.plazas)+' plaza(s)':''}</div></div>`}).join('')||'<p class="note">Ninguna empresa.</p>';
   $('#tEmp').innerHTML='<thead><tr><th>Activa</th><th class="n">Nº</th><th>Empresa</th><th>Municipio</th><th>Concierto</th><th class="n">Plazas</th><th>Turno</th><th>Contacto</th><th class="n">Le piden</th></tr></thead><tbody>'+rows.map(([id,e])=>{const c=(e.contactos||[])[0]||{};
     return`<tr class="click${e.activa===false?' off':''}" data-e="${id}"><td><label class="sw" title="Activar o desactivar para este curso"><input type="checkbox" data-act="${id}"${e.activa===false?'':' checked'} aria-label="Activa"><i></i></label></td><td class="n">${esc(e.n)}</td><td>${esc(e.nombre)}${e.activa===false&&e.motivoInactiva?`<br><small class="note">${esc(e.motivoInactiva)}</small>`:''}</td><td>${esc(e.municipio)}</td><td>${concTag(e)}${e.seguimiento?`<br><span class="tag ${e.seguimiento==='confirma'?'ok':e.seguimiento==='rechaza'?'bad':''}" style="margin-top:4px;display:inline-block">${esc(SEG[e.seguimiento].split(',')[0])}</span>`:''}</td><td class="n">${e.plazas==null||e.plazas===''?'<small class="note">—</small>':esc(e.plazas)}</td><td class="nw">${e.turno?esc(TURNO_E[e.turno]):'<small class="note">—</small>'}</td><td>${esc([c.nombre,c.telefono].filter(Boolean).join(' · '))}${(e.contactos||[]).length>1?` <small>+${e.contactos.length-1}</small>`:''}</td><td class="n">${dm[id]?.pide||''}</td></tr>`}).join('')+'</tbody>'}
 
@@ -413,7 +432,8 @@ document.addEventListener('change',async ev=>{const t=ev.target,a=S.alu[selA];
   if(selE&&['concierto','turno','activa','seguimiento','plazas'].includes(t.dataset.ef))renderKpis()});
 document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-a],[data-e],button');if(!t)return;
   if(t.dataset.vermap){const[k,id]=t.dataset.vermap.split(':');$('#ov').classList.remove('on');selE=null;if(k==='a'){M.mode='alumno';M.sel=id}else{M.focusE=id}location.hash='#mapa';if(location.hash==='#mapa')abrirMapa();return}
-  if(t.dataset.a){selA=t.dataset.a;renderListA();$('#edA')._id=null;renderEdA();if(innerWidth<860)$('#edA').scrollIntoView({behavior:'smooth'});return}
+  if(t.dataset.a){selA=t.dataset.a;renderListA();$('#edA')._id=null;renderEdA();$('#v-alumnos').classList.add('det');scrollTo(0,0);return}
+  if(t.id==='backA'){$('#v-alumnos').classList.remove('det');return}
   if(t.dataset.e&&t.tagName!=='BUTTON'){if(ev.target.closest('.sw'))return;openE(t.dataset.e);return}
   if(t.id==='closeOv')return closeE();
   if(t.id==='addA'){const id='a'+Date.now().toString(36);S.alu[id]={nombre:'NUEVO ALUMNO',zona:'',municipio:'',email:'',email2:'',direccion:'',estado:'realiza',motivo:'',turno:'indiferente',prefs:[],fijada:'',notas:''};selA=id;save('alumnos',id);$('#edA')._id=null;render();return}
