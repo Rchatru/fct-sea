@@ -158,6 +158,12 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);box
 .sc-top{display:flex;justify-content:space-between;gap:8px;align-items:center}.sc-top b{font-size:14px}
 .sc-row{display:flex;gap:10px;align-items:center;font-size:12px}.sc-row>span{width:46px;flex:none;color:var(--mut)}.sc-row .sd{width:12px;height:12px}
 @media(max-width:760px){.segtbl{display:none}.scards{display:grid}.hitos{grid-template-columns:repeat(3,minmax(0,1fr))}.segsum{grid-template-columns:1fr 1fr}}
+.hact{display:none}.sdot{width:9px;height:9px;border-radius:50%;background:var(--mut);display:inline-block}.sdot.ok{background:#0f7b0f}.sdot.busy{background:var(--ac);animation:pl 1s infinite}.sdot.err{background:var(--bai)}
+.icb{display:inline-flex;align-items:center;gap:6px;justify-content:center}.icb svg{width:17px;height:17px;flex:none}
+.tb{align-items:end}.tb input,.tb select,.tb button{min-height:36px;height:36px;margin-top:0;font-size:14px}.tb .fl{display:grid;gap:4px;font-size:12px;color:var(--mut)}.tb .fl select,.tb .fl input{min-width:150px}.tb .grow{flex:1 1 160px}.tb .fsel{width:auto}.tb .sp{flex:1}.tb .check{height:36px}
+.sheet{display:grid;gap:8px;margin-top:14px}.sheet button{display:flex;align-items:center;gap:10px;justify-content:flex-start;min-height:44px;text-align:left}.sheet svg{width:18px;height:18px;flex:none}
+.avgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px}.avl{margin:2px 0 0;padding:0;list-style:none;display:grid;gap:3px;font-size:12.5px}.avl .why{color:var(--bai);font-size:11.5px;white-space:nowrap}.avl .why::before{content:'· '}
+.mi-t b{flex:1 1 auto;min-width:0}.mi-t .tag,.mi-t .sw{flex:none}
 .mlist{display:none}.backA{display:none;margin-bottom:10px}
 .mi{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:10px 12px;display:grid;gap:4px}
 .mi-t{display:flex;gap:8px;align-items:center;justify-content:space-between}.mi-t b{font-size:13.5px;font-weight:600;line-height:1.3}
@@ -165,7 +171,10 @@ nav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--card);box
 .mi-sel{min-height:28px;font-size:12px;padding:2px 6px;margin:0;width:auto;max-width:42%;flex:none}
 .mi .tag{font-size:11px;padding:1px 7px}.mi{padding:8px 12px;gap:3px}.mi .sw{transform:scale(.85);transform-origin:left center;flex:none}
 details.howto{margin:0 0 4px}details.howto summary{cursor:pointer;color:var(--ac);font-size:13px;margin-bottom:6px}
-@media(max-width:760px){.kpis{display:flex;overflow-x:auto;scrollbar-width:none;gap:6px;margin:0 -16px 16px;padding:0 16px}.kpis::-webkit-scrollbar{display:none}.kpis .kpi{flex:0 0 auto;padding:8px 12px;gap:8px}.kpis .kpi .ic{width:28px;height:28px}.kpis .kpi b{font-size:17px}.kpis .kpi span{white-space:nowrap}.segsum .kpi span{white-space:normal}
+@media(max-width:760px){.hact{display:flex;gap:10px;align-items:center;margin-left:auto}.hact .icb{width:38px;height:38px;min-height:38px;padding:0;border-radius:8px}.hact svg{width:20px;height:20px}.foot{display:none!important}.brand{align-items:center}
+.tb{flex-wrap:wrap;gap:8px}.tb .bl{display:none}.tb .icb{width:38px;padding:0;flex:none}.tb .fl{flex:1 1 40%}.tb .fl select,.tb .fl input{min-width:0;width:100%}.tb .check{flex:1 1 auto;font-size:12.5px}.tb .sp{display:none}.tb .grow{flex:1 1 100px}.tb .fsel{flex:0 0 112px}
+h2.sec-h,h2{font-size:18px}.sec-h{margin-top:22px}.mi .sw{transform:scale(.75)}
+.kpis{display:flex;overflow-x:auto;scrollbar-width:none;gap:6px;margin:0 -16px 16px;padding:0 16px}.kpis::-webkit-scrollbar{display:none}.kpis .kpi{flex:0 0 auto;padding:8px 12px;gap:8px}.kpis .kpi .ic{width:28px;height:28px}.kpis .kpi b{font-size:17px}.kpis .kpi span{white-space:nowrap}.segsum .kpi span{white-space:normal}
 .phead p{display:none}.dk{display:none}.mlist{display:grid;gap:6px}.backA{display:inline-flex}
 #v-alumnos .split{gap:10px}#v-alumnos.det .split>div:first-child{display:none}#v-alumnos:not(.det) #edA{display:none}
 .list{max-height:none;padding:2px}.li{padding:8px 10px}.li small{font-size:11.5px}
@@ -176,7 +185,7 @@ details.howto{margin:0 0 4px}details.howto summary{cursor:pointer;color:var(--ac
 </style><script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script></head><body>
 <div class="app"><aside>
 <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="m12.6 10.5-2 3h2.8l-2 3"/></svg></div>
-<div><b>Prácticas FCT</b><span class="chip">1º SEA</span></div></div>
+<div><b>Prácticas FCT</b><span class="chip">1º SEA</span></div><div class="hact"><i class="sdot" id="saveDot"></i><button class="ghost icb" id="cfgBtn" aria-label="Cuenta y copias" title="Cuenta y copias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button></div></div>
 <nav id="nav"><a href="#alumnos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><circle cx="17.5" cy="9" r="2.6"/><path d="M17 14.6c2.4.2 4 1.8 4.5 4.4"/></svg><span>Alumnos</span><em id="bA"></em></a><a href="#asignacion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h4l10 12h4M3 18h4l3-3.6M14 9.6 17 6h4"/><path d="m19 3 2.5 3L19 9M19 15l2.5 3-2.5 3"/></svg><span>Asignación</span><em id="bR"></em></a><a href="#empresas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 21V5.5L12 3v18M12 9l8 2.5V21M2.5 21h19"/><path d="M7 8h2M7 12h2M7 16h2M15 14h2M15 17.5h2"/></svg><span>Empresas</span><em id="bE"></em></a><a href="#seguimiento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1M8.5 12l2.2 2.2L15.5 9.5M8.5 17.5h7"/></svg><span>Seguimiento</span><em id="bS"></em></a><a href="#mapa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M9 4 3 6.5v13.5l6-2.5 6 2.5 6-2.5V4l-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></svg><span>Mapa</span><em id="bM"></em></a></nav>
 <div class="foot"><div class="save" id="saveSt"><i></i><span>Conectando…</span></div>
 <div class="row" style="gap:6px"><button class="ghost" id="backup">Descargar copia</button><button class="ghost" id="restore">Restaurar</button><input type="file" id="restFile" accept=".json,application/json" hidden></div>
@@ -191,7 +200,7 @@ details.howto{margin:0 0 4px}details.howto summary{cursor:pointer;color:var(--ac
 <section class="view" id="v-alumnos">
 <div class="split">
 <div>
-<div class="toolbar"><input id="qa" class="grow" style="flex:1 1 0;margin:0" placeholder="Buscar alumno" aria-label="Buscar alumno"><button id="addA">Añadir</button></div>
+<div class="toolbar tb"><input id="qa" class="grow" placeholder="Buscar alumno…" aria-label="Buscar alumno"><button id="addA" class=" icb" title="Añadir alumno" aria-label="Añadir alumno"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="bl">Añadir</span></button></div>
 <div class="list" id="listA"></div>
 </div>
 <div id="edA"></div>
@@ -199,27 +208,26 @@ details.howto{margin:0 0 4px}details.howto summary{cursor:pointer;color:var(--ac
 </section>
 
 <section class="view" id="v-asignacion">
-<div class="toolbar">
-<label>Criterio del reparto<select id="crit"><option value="primeras">Máximo de alumnos en su 1ª opción</option><option value="equilibrado">Equilibrado: que nadie baje mucho</option></select></label>
-<label>Fecha de inicio de prácticas<input type="date" id="fIni"></label>
-<label class="check"><input type="checkbox" id="incT"> Contar conciertos en trámite</label>
-<span style="flex:1"></span><button id="freeze" class="sec" title="Fija a cada alumno en la empresa que tiene ahora, para que nuevos cambios no lo muevan">Fijar reparto actual</button><button id="unfreeze" class="sec">Quitar fijados</button><button id="cpy" class="sec">Copiar para Excel</button><button id="expCsv">Exportar CSV</button>
+<div class="toolbar tb">
+<label class="fl">Criterio<select id="crit"><option value="primeras">Más 1ª opciones</option><option value="equilibrado">Equilibrado</option></select></label>
+<label class="fl">Inicio de prácticas<input type="date" id="fIni"></label>
+<label class="check" title="Contar las empresas con el concierto en trámite como disponibles"><input type="checkbox" id="incT"> Contar en trámite</label><span class="sp"></span><button id="freeze" class="sec icb" title="Fijar el reparto actual (que nuevos cambios no muevan a nadie)" aria-label="Fijar el reparto actual (que nuevos cambios no muevan a nadie)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span class="bl">Fijar reparto</span></button><button id="unfreeze" class="sec icb" title="Quitar fijados" aria-label="Quitar fijados"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.5-2"/></svg><span class="bl">Quitar fijados</span></button><button id="cpy" class="sec icb" title="Copiar para pegar en Excel" aria-label="Copiar para pegar en Excel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg><span class="bl">Copiar</span></button><button id="expCsv" class=" icb" title="Descargar CSV" aria-label="Descargar CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg><span class="bl">CSV</span></button>
 </div>
 <details class="howto"><summary>¿Cómo funciona el reparto?</summary><p class="note info">El reparto busca la combinación en la que el grupo, en conjunto, queda más cerca de sus primeras opciones. «Equilibrado» castiga mucho más bajar a la 3ª, 4ª o 5ª, así que prefiere que todos queden en 2ª antes que uno en 4ª. Los conciertos se comprueban a la fecha de inicio (o a hoy si no la pones). Fija un alumno en una empresa y el resto se recalcula.</p></details>
 <h2 class="sec-h">Reparto propuesto</h2>
 <div class="tbl scroll dk"><table id="tRes"></table></div><div class="mlist" id="mRes"></div>
 <h2 class="sec-h">Demanda por empresa</h2>
-<p class="note" style="margin:-6px 0 12px">Solo empresas pedidas o con alumnado asignado. «Disputada» = está completa y algún alumno la tenía por delante de la que le ha tocado (pasa el ratón para ver quién). Las plazas sin confirmar cuentan como 1.</p>
+<details class="howto"><summary>¿Qué significa «disputada»?</summary><p class="note info">Está completa y algún alumno la tenía por delante de la que le ha tocado. Las plazas sin confirmar cuentan como 1. Solo salen las empresas pedidas o con alumnado asignado.</p></details>
 <div class="tbl scroll dk"><table id="tDem"></table></div><div class="mlist" id="mDem"></div>
 <h2 class="sec-h">Avisos</h2>
 <div id="avisos"></div>
 </section>
 
 <section class="view" id="v-empresas">
-<div class="toolbar">
-<input id="qe" class="grow" placeholder="Buscar empresa, municipio o contacto" aria-label="Buscar empresa" style="margin:0">
-<select id="fe" aria-label="Filtrar por concierto" style="width:auto;margin:0"><option value="">Todas</option><option value="act">Solo activas</option><option value="inact">Solo desactivadas</option><option value="si">Vigente</option><option value="tramite">En trámite</option><option value="no">Sin concierto</option><option value="cad">Caducado</option></select>
-<button id="campos" class="sec">Campos personalizados</button><button id="addE">Añadir empresa</button>
+<div class="toolbar tb">
+<input id="qe" class="grow" placeholder="Buscar empresa…" aria-label="Buscar empresa, municipio o contacto">
+<select id="fe" aria-label="Filtrar" class="fsel"><option value="">Todas</option><option value="act">Activas</option><option value="inact">Desactivadas</option><option value="si">Vigente</option><option value="tramite">En trámite</option><option value="no">Sin concierto</option><option value="cad">Caducado</option></select>
+<button id="campos" class="sec icb" title="Campos personalizados" aria-label="Campos personalizados"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span class="bl">Campos</span></button><button id="addE" class=" icb" title="Añadir empresa" aria-label="Añadir empresa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="bl">Añadir</span></button>
 </div>
 <div class="tbl scroll dk"><table id="tEmp"></table></div><div class="mlist" id="mEmp"></div>
 </section>
@@ -270,7 +278,7 @@ function motivoNo(a,id){const e=S.emp[id];if(!e)return'empresa borrada';if(e.act
 
 // ---------- guardado ----------
 const timers={},chains={};
-let pend=0,saveErr=false,stT=null,geoMsg='';function st(){const e=$('#saveSt');if(!e)return;const paint=()=>{const busy=pend>0;e.className='save '+(saveErr?'err':busy||geoMsg?'busy':'ok');e.lastChild.textContent=saveErr?'Error al guardar':geoMsg||(busy?'Guardando…':'Todo guardado')};
+let pend=0,saveErr=false,stT=null,geoMsg='';function st(){const e=$('#saveSt');if(!e)return;const paint=()=>{const busy=pend>0;e.className='save '+(saveErr?'err':busy||geoMsg?'busy':'ok');e.lastChild.textContent=saveErr?'Error al guardar':geoMsg||(busy?'Guardando…':'Todo guardado');const d=$('#saveDot');if(d){d.className='sdot '+e.className.split(' ')[1];d.title=e.lastChild.textContent}};
   clearTimeout(stT);if(pend>0&&!saveErr&&!geoMsg&&e.className.includes('ok'))stT=setTimeout(paint,700);else paint()}
 function track(pr){pend++;st();return pr.then(()=>{saveErr=false},e=>{saveErr=true;toast('No se pudo guardar: '+(e.message||e.code))}).finally(()=>{pend--;st()})}
 function save(col,id){if(!db)return;const p=col+'/'+id;clearTimeout(timers[p]);
@@ -359,11 +367,14 @@ function renderRes(){const rows=sortedAlu().filter(([,a])=>a.estado==='realiza')
   $('#mRes').innerHTML=rows.map(([id,a])=>{const r=res[id]||{};const op=!r.emp?(a.prefs?.length?'<span class="tag bad">Sin plaza</span>':'<span class="tag wa">Sin pref.</span>'):r.rank<0?'<span class="tag wa">Manual</span>':`<span class="tag${r.rank===0?' ok':''}">${r.rank+1}ª</span>`;
     return`<div class="mi"><div class="mi-t"><b>${esc(a.nombre)}</b>${op}</div><div class="mi-s"><span style="flex:1;min-width:0">${r.emp?esc(S.emp[r.emp]?.nombre||''):'—'}</span><select data-fix="${id}" class="mi-sel" aria-label="Fijar empresa"><option value="">${a.fijada?'Quitar fijado':'Auto'}</option>${sortedEmp().map(([eid,e])=>`<option value="${eid}"${eid===a.fijada?' selected':''}>Fijar en ${esc(e.n+' · '+e.nombre)}</option>`).join('')}</select></div></div>`}).join('');
   const dm=demanda();const col=['#0f7b0f','#6ccb5f','#f7c948','#f08a4b','#c42b1c'];
-  const sitT=d=>d.asig>d.cap?'<span class="tag bad">Sobrecupo</span>':d.fuera.length?`<span class="tag wa">Disputada · ${d.fuera.length} fuera</span>`:motivoNo({turno:'indiferente'},d.id)?'<span class="tag bad">No asignable</span>':'<span class="tag ok">Sin conflicto</span>';
-  $('#mDem').innerHTML=dm.map(d=>`<div class="mi click" data-e="${d.id}"><div class="mi-t"><b>${esc(d.e.n+' · '+d.e.nombre)}</b>${sitT(d)}</div><div class="mi-s"><div class="bars" style="width:70px">${d.r.map((c,i)=>`<i style="width:${d.pide?c/d.pide*100:0}%;background:${col[i]}"></i>`).join('')}</div> Piden ${d.pide} · asignados ${d.asig} · plazas ${d.e.plazas==null||d.e.plazas===''?'¿1?':d.cap}</div>${d.fuera.length?`<div class="mi-s">Fuera: ${esc(d.fuera.join(', '))}</div>`:''}</div>`).join('')||'<p class="note">Aún no hay preferencias.</p>';
+  const sitT=d=>d.asig>d.cap?'<span class="tag bad">Sobrecupo</span>':d.fuera.length?`<span class="tag wa">Disputada</span>`:motivoNo({turno:'indiferente'},d.id)?'<span class="tag bad">No asignable</span>':'<span class="tag ok">Sin conflicto</span>';
+  $('#mDem').innerHTML=dm.map(d=>`<div class="mi click" data-e="${d.id}"><div class="mi-t"><b>${esc(d.e.n+' · '+d.e.nombre)}</b>${sitT(d)}</div><div class="mi-s"><div class="bars" style="width:70px">${d.r.map((c,i)=>`<i style="width:${d.pide?c/d.pide*100:0}%;background:${col[i]}"></i>`).join('')}</div> Piden ${d.pide} · asignados ${d.asig} · plazas ${d.e.plazas==null||d.e.plazas===''?'¿1?':d.cap}</div>${d.fuera.length?`<div class="mi-s">Se queda${d.fuera.length>1?'n':''} fuera: ${esc(d.fuera.map(n=>{const[ap,no]=n.split(',');return (no||'').trim().split(' ')[0]+' '+(ap||'').trim().split(' ')[0]}).join(', '))}</div>`:''}</div>`).join('')||'<p class="note">Aún no hay preferencias.</p>';
   $('#tDem').innerHTML=dm.length?'<thead><tr><th>Empresa</th><th>Concierto</th><th class="n">Plazas</th><th class="n">Le piden</th><th>1ª · 2ª · 3ª · 4ª · 5ª</th><th class="n">Asignados</th><th>Situación</th></tr></thead><tbody>'+dm.map(d=>`<tr class="click" data-e="${d.id}"><td>${esc(d.e.n+' · '+d.e.nombre)}</td><td>${concTag(d.e)}</td><td class="n">${d.e.plazas==null||d.e.plazas===''?'1 <small>(sin confirmar)</small>':d.cap}</td><td class="n">${d.pide}</td><td><div class="row" style="gap:6px"><div class="bars">${d.r.map((c,i)=>`<i style="width:${d.pide?c/d.pide*100:0}%;background:${col[i]}"></i>`).join('')}</div><small>${d.r.join(' · ')}</small></div></td><td class="n">${d.asig}</td><td>${d.asig>d.cap?'<span class="tag bad">Sobrecupo</span>':d.fuera.length?`<span class="tag wa" title="${esc(d.fuera.join(', '))}">Disputada · ${d.fuera.length} se queda${d.fuera.length>1?'n':''} fuera</span>`:motivoNo({turno:'indiferente'},d.id)?'<span class="tag bad">No asignable</span>':'<span class="tag ok">Sin conflicto</span>'}</td></tr>`).join('')+'</tbody>':'<tbody><tr><td class="empty">Aún no hay preferencias.</td></tr></tbody>';
   const av=avisos();
-  $('#avisos').innerHTML=av.length?'<div class="card"><ul style="margin:0;padding-left:20px">'+av.map(x=>`<li>${x}</li>`).join('')+'</ul></div>':'<p class="note">Sin avisos.</p>';
+  {const G={};for(const[id,a]of rows){const L=[];(a.prefs||[]).forEach((eid,i)=>{const m=motivoNo(a,eid);if(m)L.push(`<b>${i+1}ª</b> ${esc(S.emp[eid]?.nombre||'?')} <span class="why">${esc(m)}</span>`)});
+      if(a.fijada&&S.emp[a.fijada]){const m=motivoNo(a,a.fijada);if(m)L.push(`Fijado en ${esc(S.emp[a.fijada].nombre)} <span class="why">${esc(m)}</span>`)}if(L.length)G[id]=L}
+    const ex=dm.filter(d=>d.asig>d.cap).map(d=>`<div class="mi"><div class="mi-t"><b>${esc(d.e.nombre)}</b><span class="tag bad">Sobrecupo</span></div><div class="mi-s">${d.asig} alumnos fijados y ${d.cap} plaza(s)</div></div>`).join('');
+    $('#avisos').innerHTML=Object.keys(G).length||ex?`<p class="note" style="margin:-4px 0 10px">Opciones que el reparto no puede usar. No es grave si el alumno tiene otras válidas.</p><div class="avgrid">${ex}${Object.entries(G).map(([id,L])=>`<div class="mi"><div class="mi-t"><b>${esc(S.alu[id].nombre)}</b><span class="tag ${res[id]?.emp?'':'bad'}">${res[id]?.emp?L.length+' no válida'+(L.length>1?'s':''):'sin plaza'}</span></div><ul class="avl">${L.map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>`:'<p class="note">Sin avisos.</p>'}
   $('#fIni').value=S.aj.fechaInicio||'';$('#incT').checked=!!S.aj.incluirTramite;$('#crit').value=S.aj.criterio||'primeras'}
 
 function renderEmp(){const q=$('#qe').value.toLowerCase(),f=$('#fe').value;const dm={};for(const d of demanda())dm[d.id]=d;
@@ -524,7 +535,11 @@ async function cargar(){$('#load').style.display='block';$('#load').textContent=
   if(!r.data.length){$('#load').innerHTML='<div class="card" style="text-align:left"><h2>La base de datos está vacía</h2><p>Importa la copia de seguridad que descargaste de la versión anterior (archivo <code>FCT_1SEA_copia_….json</code>).</p><button id="restore">Importar copia</button></div>'}
   else $('#load').style.display='none';
   $('#edA')._id=null;render();if(location.hash==='#mapa')abrirMapa()}
-document.addEventListener('click',ev=>{if(ev.target.closest('#saveSt')&&innerWidth<=760)$('.foot').classList.toggle('open')});
+document.addEventListener('click',ev=>{const t=ev.target.closest('#cfgBtn,[data-run]');if(!t)return;
+  if(t.id==='cfgBtn'){$('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Cuenta y datos</h2><button class="sec" id="closeOv">Cerrar</button></div>
+    <p class="note" style="margin-top:10px">${esc($('#saveSt').lastChild.textContent)} · ${esc($('#uMail').textContent)}</p>
+    <div class="sheet"><button class="sec" data-run="backup">${'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>'}Descargar copia de seguridad</button><button class="sec" data-run="restore">Restaurar o importar copia</button><button class="sec" data-run="secBtn">Seguridad y verificación en dos pasos</button><button class="danger" data-run="logout">Cerrar sesión</button></div>`;$('#ov').classList.add('on');return}
+  $('#ov').classList.remove('on');const b=document.getElementById(t.dataset.run);if(b)b.click()});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!pend&&!ubicando&&!$('#auth').classList.contains('on')&&!document.activeElement?.closest('#edA,#ovc'))cargar()});
 
 // ---------- mapa ----------
@@ -662,7 +677,7 @@ function renderSeg(){const box=$('#segBox');if(!box)return;const H=hitos();const
     <td class="nw">${H.map(h=>dot(estHito(s.cuestT[h.id]?.fecha,h),s.cuestT[h.id]?.fecha&&fmtD(s.cuestT[h.id].fecha),h.label)).join('')}</td>
     <td class="nw">${ult?`${fmtD(ult)}<br><small class="note">hace ${diasEntre(ult,hoyISO())} días</small>`:'<small class="note">—</small>'}</td></tr>`}).join('')||'<tr><td class="empty">Ningún alumno hará la FCT todavía.</td></tr>'}</tbody></table></div></div>
   <div class="legend" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin:10px 0 0"><div><i class="sd ok"></i>Hecho</div><div><i class="sd wa"></i>Vence en ≤ 7 días</div><div><i class="sd bad"></i>Vencido sin hacer</div><div><i class="sd"></i>Aún no toca</div></div>
-  <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="sec" id="segCsv">Exportar CSV</button></div>
+  <div class="row" style="justify-content:flex-end;margin-top:10px"><button class="sec icb" id="segCsv" title="Descargar CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg><span class="bl">CSV</span></button></div>
   <h2 class="sec-h">Pendiente</h2>${(()=>{const av=avs;return av.length?'<div class="card"><ul style="margin:0;padding-left:20px">'+av.map(([id,t])=>`<li><button class="linkb" data-seg="${id}" style="color:var(--ink);text-align:left">${esc(t)}</button></li>`).join('')+'</ul></div>':'<p class="note">Nada pendiente.</p>'})()}`;
   const b=$('#bS');const n=segAvisos().length;b.textContent=n||'';b.className=n?'r':''}
 function openSeg(id){const a=S.alu[id];if(!a)return;const s=segDe(a),H=hitos(),r=res[id],e=r?.emp&&S.emp[r.emp];selSeg=id;
