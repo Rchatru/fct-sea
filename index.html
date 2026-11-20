@@ -118,7 +118,7 @@ button.ghost{background:transparent;color:var(--ink);border:1px solid var(--ctlb
 .kpi.alert b{color:inherit}
 td.nw{white-space:nowrap}
 .mini{display:flex;flex-wrap:wrap;gap:6px}
-@media(max-width:760px){nav em{display:none}.foot{margin-top:4px;padding:10px 4px 0;grid-template-columns:1fr;gap:8px}.foot>small{display:none}.user{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
+@media(max-width:760px){nav{gap:2px}nav a{flex:1 1 0;flex-direction:column;gap:3px;justify-content:center;padding:6px 2px;min-height:54px;font-size:11.5px;text-align:center}nav a span{flex:none;white-space:nowrap}nav svg{width:20px;height:20px}nav a.on::before{left:25%;right:25%}nav em{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.kpi{padding:10px 12px;gap:10px}.kpi .ic{width:32px;height:32px}.kpi .ic svg{width:17px;height:17px}.kpi b{font-size:20px;white-space:nowrap}.kpi span{font-size:11.5px;line-height:1.25;display:block}.ptitle{font-size:24px}.phead p{font-size:13px}.foot{margin-top:4px;padding:10px 4px 0;grid-template-columns:1fr;gap:8px}.foot>small{display:none}.user{grid-template-columns:minmax(0,1fr) auto;align-items:center}}
 
 .user{display:grid;gap:6px;font-size:12px;color:var(--mut)}.user span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #auth{position:fixed;inset:0;z-index:20;display:none;place-items:center;padding:16px;background:linear-gradient(165deg,var(--tint) 0,var(--bg) 70%)}
@@ -245,7 +245,8 @@ function motivoNo(a,id){const e=S.emp[id];if(!e)return'empresa borrada';if(e.act
 
 // ---------- guardado ----------
 const timers={},chains={};
-let pend=0,saveErr=false;function st(){const e=$('#saveSt');if(!e)return;e.className='save '+(saveErr?'err':pend?'busy':'ok');e.lastChild.textContent=saveErr?'Error al guardar':pend?'Guardando…':'Todo guardado'}
+let pend=0,saveErr=false,stT=null,geoMsg='';function st(){const e=$('#saveSt');if(!e)return;const paint=()=>{const busy=pend>0;e.className='save '+(saveErr?'err':busy||geoMsg?'busy':'ok');e.lastChild.textContent=saveErr?'Error al guardar':geoMsg||(busy?'Guardando…':'Todo guardado')};
+  clearTimeout(stT);if(pend>0&&!saveErr&&!geoMsg&&e.className.includes('ok'))stT=setTimeout(paint,700);else paint()}
 function track(pr){pend++;st();return pr.then(()=>{saveErr=false},e=>{saveErr=true;toast('No se pudo guardar: '+(e.message||e.code))}).finally(()=>{pend--;st()})}
 function save(col,id){if(!db)return;const p=col+'/'+id;clearTimeout(timers[p]);
   timers[p]=setTimeout(()=>{const data=col==='empresas'?S.emp[id]:S.alu[id];if(!data)return;
@@ -288,7 +289,7 @@ function renderKpis(){const al=Object.values(S.alu),act=al.filter(a=>a.estado===
 
 function renderListA(){const q=$('#qa').value.toLowerCase();
   $('#listA').innerHTML=sortedAlu().filter(([,a])=>a.nombre.toLowerCase().includes(q)).map(([id,a])=>{
-    const np=(a.prefs||[]).length;const t=a.estado!=='realiza'?`<span class="tag bad">${esc(ESTADOS[a.estado]?.split(' ')[0]||a.estado)}</span>`:np?`<span class="tag ok">${np} pref.</span>`:'<span class="tag wa">Sin pref.</span>';
+    const np=(a.prefs||[]).length;const t=a.estado!=='realiza'?`<span class="tag ${a.estado==='pendiente'?'wa':'bad'}">${esc({pendiente:'Sin decidir',exencion:'Exención',aplaza:'Aplaza',baja:'Baja',no_apto:'No apto',otro:'Otro'}[a.estado]||a.estado)}</span>`:np?`<span class="tag ok">${np} pref.</span>`:'<span class="tag wa">Sin pref.</span>';
     return`<div class="li${id===selA?' sel':''}" data-a="${id}"><div>${esc(a.nombre)}<br><small>${esc(a.municipio||a.zona)}</small></div>${t}</div>`}).join('')||'<div class="empty">Ningún alumno</div>'}
 
 function empOptions(sel,a){return'<option value="">—</option>'+sortedEmp().map(([id,e])=>{const m=a?motivoNo(a,id):'';
@@ -486,7 +487,7 @@ async function cargar(){$('#load').style.display='block';$('#load').textContent=
   if(!r.data.length){$('#load').innerHTML='<div class="card" style="text-align:left"><h2>La base de datos está vacía</h2><p>Importa la copia de seguridad que descargaste de la versión anterior (archivo <code>FCT_1SEA_copia_….json</code>).</p><button id="restore">Importar copia</button></div>'}
   else $('#load').style.display='none';
   $('#edA')._id=null;render();if(location.hash==='#mapa')abrirMapa()}
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!pend&&!$('#auth').classList.contains('on')&&!document.activeElement?.closest('#edA,#ovc'))cargar()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!pend&&!ubicando&&!$('#auth').classList.contains('on')&&!document.activeElement?.closest('#edA,#ovc'))cargar()});
 
 // ---------- mapa ----------
 let map=null,capa=null,osrmCache={};
@@ -543,9 +544,12 @@ async function ubicar(todos){if(ubicando)return;ubicando=true;
   if(todos){for(const a of Object.values(S.alu))delete a.geoFallo;for(const e of Object.values(S.emp))delete e.geoFallo}
   const P=pendientesGeo();let n=0;
   for(const[col,id]of P){n++;const prog=$('#geoProg');if(prog)prog.textContent=`Ubicando direcciones… ${n}/${P.length}`;
-    const o=col==='alumnos'?S.alu[id]:S.emp[id];if(!o)continue;const Lm=col==='alumnos'?GEO.limpiaAlumno(o.direccion):GEO.limpiaEmpresa(o);
+    geoMsg=`Ubicando direcciones ${n}/${P.length}…`;st();
+    const o=col==='alumnos'?S.alu[id]:S.emp[id];if(!o||o.geo)continue;const Lm=col==='alumnos'?GEO.limpiaAlumno(o.direccion):GEO.limpiaEmpresa(o);
     let g=null;try{g=await GEO.geocode(Lm)}catch{}
-    if(g){o.geo={lat:g.lat,lng:g.lng,precision:g.precision,fuente:g.fuente}}else o.geoFallo=true;save(col,id)}
+    const cur=col==='alumnos'?S.alu[id]:S.emp[id];if(!cur)continue;
+    if(g){cur.geo={lat:g.lat,lng:g.lng,precision:g.precision,fuente:g.fuente}}else cur.geoFallo=true;save(col,id)}
+  geoMsg='';st();
   ubicando=false;if(P.length){toast(`Direcciones ubicadas: ${P.length}`);dibujarMapa(false)}else panel()}
 function panel(){const box=$('#mside');if(!box)return;const al=sortedAlu().filter(([,a])=>a.estado==='realiza');
   const fuera=[...sortedAlu().filter(([,a])=>a.estado==='realiza'&&a.geo&&!enLP(a.geo)).map(([,a])=>'Alumno: '+a.nombre),...sortedEmp().filter(([,e])=>e.geo&&!enLP(e.geo)).map(([,e])=>e.n+' · '+e.nombre+(e.municipio?' ('+e.municipio+')':''))];
