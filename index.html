@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.cartociudad.es; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://gadcmpcfxwlroanjefxu.supabase.co wss://gadcmpcfxwlroanjefxu.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org; font-src 'self'; base-uri 'self'; form-action 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.cartociudad.es; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://tile.openstreetmap.org; connect-src 'self' https://gadcmpcfxwlroanjefxu.supabase.co wss://gadcmpcfxwlroanjefxu.supabase.co https://nominatim.openstreetmap.org https://router.project-osrm.org; font-src 'self'; manifest-src 'self'; worker-src 'self'; base-uri 'self'; form-action 'self'">
 <meta name="robots" content="noindex,nofollow"><meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#0067c0"><link rel="apple-touch-icon" href="icons/icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230067c0'/%3E%3Cpath d='m13 5-4 7h4l-2 7 6-9h-4l2-5z' fill='white'/%3E%3C/svg%3E"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Prácticas FCT · 1º SEA</title>
 <style>
@@ -338,6 +339,7 @@ function renderEdA(){const box=$('#edA');if(box.contains(document.activeElement)
   <label>Municipio<input data-f="municipio" value="${esc(a.municipio)}"></label>
   <label>Email<input data-f="email" value="${esc(a.email)}"></label>
   <label>Email personal<input data-f="email2" value="${esc(a.email2)}"></label>
+  <label>Teléfono<input data-f="telefono" type="tel" value="${esc(a.telefono||'')}"></label>
   <label>¿Hará la FCT este curso?<select data-f="estado">${Object.entries(ESTADOS).map(([k,v])=>`<option value="${k}"${k===a.estado?' selected':''}>${v}</option>`).join('')}</select></label>
   <label>Motivo / detalle<input data-f="motivo" value="${esc(a.motivo)}"></label>
   <label>Turno preferido<select data-f="turno">${Object.entries(TURNO_A).map(([k,v])=>`<option value="${k}"${k===a.turno?' selected':''}>${v}</option>`).join('')}</select></label>
@@ -403,7 +405,7 @@ function openE(id){selE=id;const e=S.emp[id];if(!e)return;
   <div class="row" style="margin-top:8px"><button class="sec" id="addC">+ Contacto</button><span style="flex:1"></span><button class="danger" id="delE">Eliminar empresa</button></div>`;
   $('#ov').classList.add('on')}
 function openMsg(title,html,ok){$('#ovc').innerHTML=`<h2>${title}</h2>${html}<div class="row" style="justify-content:flex-end;margin-top:16px"><button class="sec" id="closeOv">Cancelar</button><button id="okOv">Restaurar</button></div>`;$('#ov').classList.add('on');$('#okOv').onclick=()=>{$('#ov').classList.remove('on');ok()}}
-function closeE(){$('#ov').classList.remove('on');selE=null;selSeg=null;render()}
+function closeE(){$('#ov').classList.remove('on');selE=null;selSeg=null;msgCtx=null;render()}
 
 function openCampos(){$('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Campos personalizados</h2><button class="sec" id="closeOv">Cerrar</button></div>
   <p class="note">Campos extra que aparecerán en la ficha de todas las empresas (p. ej. «Horario», «Web», «Persona que firma el concierto»).</p>
@@ -690,7 +692,7 @@ function openSeg(id){const a=S.alu[id];if(!a)return;const s=segDe(a),H=hitos(),r
   <h3>Cuestionarios del alumno</h3><div class="grid">${H.map(h=>`<label>${h.label}${h.fecha?` <small class="note">(límite ${fmtD(h.fecha)})</small>`:''}<div class="row" style="gap:6px;flex-wrap:nowrap"><input type="date" data-qa="${h.id}" value="${esc(s.cuestA[h.id]||'')}" style="margin-top:6px"><button class="ghost" data-hoy="qa:${h.id}" style="margin-top:6px">Hoy</button></div></label>`).join('')}</div>
   <label style="margin-top:12px">Diario de actividades: observaciones<textarea data-sg="diario">${esc(s.diario||'')}</textarea></label>
   <h3>Seguimiento con el tutor de empresa</h3><div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(250px,1fr))">${H.map(h=>{const x=s.cuestT[h.id]||{};return`<div class="contact" style="grid-template-columns:1fr;margin:0"><label>${h.label}${h.fecha?` <small class="note">(límite ${fmtD(h.fecha)})</small>`:''}<div class="row" style="gap:6px;flex-wrap:nowrap"><input type="date" data-qt="${h.id}" value="${esc(x.fecha||'')}" style="margin-top:6px"><button class="ghost" data-hoy="qt:${h.id}" style="margin-top:6px">Hoy</button></div></label><label>Comentario<textarea data-qtc="${h.id}" style="min-height:52px">${esc(x.com||'')}</textarea></label></div>`}).join('')}</div>
-  <h3>Registro de contactos</h3>
+  <div class="row" style="justify-content:space-between;margin-top:24px"><h3 style="margin:0">Registro de contactos</h3><button data-msg="${id}">Enviar mensaje…</button></div>
   <div class="contact" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))"><label>Fecha<input type="date" id="cFecha" value="${hoyISO()}"></label><label>Tipo<select id="cTipo">${tipos.map(t=>`<option>${t}</option>`).join('')}</select></label><label>Con<select id="cCon"><option>Tutor de empresa</option><option>Alumno</option><option>Otro</option></select></label><label style="grid-column:1/-1">Notas<textarea id="cNotas" style="min-height:52px"></textarea></label><div><button id="cAdd">Añadir contacto</button></div></div>
   <div class="tbl scroll" style="margin-top:8px"><table><tbody>${[...s.contactos].map((c,i)=>[c,i]).sort((x,y)=>(y[0].fecha||'').localeCompare(x[0].fecha||'')).map(([c,i])=>`<tr><td class="nw">${fmtD(c.fecha)}</td><td class="nw">${esc(c.tipo)} · ${esc(c.con)}</td><td>${esc(c.notas)}</td><td><button class="ghost" data-cdx="${i}">Quitar</button></td></tr>`).join('')||'<tr><td class="note">Sin contactos registrados.</td></tr>'}</tbody></table></div>
   <label style="margin-top:12px">Comentarios generales<textarea data-sg="comentarios">${esc(s.comentarios||'')}</textarea></label>`;
@@ -719,6 +721,62 @@ document.addEventListener('click',ev=>{const t=ev.target.closest('[data-seg],#se
     for(const[id,a]of sortedAlu()){if(a.estado!=='realiza')continue;const s=segDe(a),e=S.emp[res[id]?.emp];
       L.push([a.nombre,e?.nombre||'',s.horasConf,s.diasAsist,s.diasNoAsist,s.porRellenar,s.anexoI?'Sí':'',s.anexoII?'Sí':'',...H.map(h=>fmtD(s.cuestA[h.id])),s.diario,...H.flatMap(h=>[fmtD(s.cuestT[h.id]?.fecha),s.cuestT[h.id]?.com]),s.contactos.map(c=>`${fmtD(c.fecha)} ${c.tipo} (${c.con}): ${c.notas}`).join(' | '),s.comentarios])}
     bajar('seguimiento_FCT_1SEA.csv','﻿'+L.map(r=>r.map(q).join(';')).join('\r\n'),'text/csv;charset=utf-8')}});
+
+// ---------- mensajes preparados ----------
+const PLANT_DEF=[
+ {id:'p1',nombre:'Recordatorio de cuestionario (tutor de empresa)',para:'tutor',asunto:'FCT {alumno} · cuestionario {hito}',cuerpo:'Buenos días, {tutor}:\n\nLe escribo como tutor de FCT de {alumno}, que realiza sus prácticas en {empresa}. Le recuerdo que tiene pendiente el cuestionario de seguimiento {hito} en GDCAN (fecha límite: {fecha_limite}).\n\nSi tiene cualquier duda o incidencia, quedo a su disposición.\n\nUn saludo,\n{firma}'},
+ {id:'p2',nombre:'Presentación al inicio (tutor de empresa)',para:'tutor',asunto:'Prácticas FCT de {alumno} · CIFP Virgen de Las Nieves',cuerpo:'Buenos días, {tutor}:\n\nSoy el tutor de FCT del ciclo de Sistemas Electrotécnicos y Automatizados del CIFP Virgen de Las Nieves. {alumno} comenzará sus prácticas en {empresa} el {inicio}.\n\nEstaré en contacto durante el periodo de prácticas para hacer el seguimiento. Para cualquier cuestión puede escribirme a este correo.\n\nMuchas gracias por su colaboración.\n\nUn saludo,\n{firma}'},
+ {id:'p3',nombre:'Diario sin rellenar (alumno)',para:'alumno',asunto:'FCT · diario de actividades pendiente',cuerpo:'Hola, {nombre_alumno}:\n\nTienes {dias_diario} día(s) del diario de actividades sin rellenar en GDCAN. Por favor, ponte al día lo antes posible.\n\nUn saludo,\n{firma}'},
+ {id:'p4',nombre:'Recordatorio de cuestionario (alumno)',para:'alumno',asunto:'FCT · cuestionario {hito} pendiente',cuerpo:'Hola, {nombre_alumno}:\n\nTe recuerdo que tienes pendiente el cuestionario {hito} en GDCAN (fecha límite: {fecha_limite}).\n\nUn saludo,\n{firma}'}];
+const plantillas=()=>S.aj.plantillas?.length?S.aj.plantillas:PLANT_DEF;
+const firma=()=>S.aj.firma??'Roberto Chávez Trujillo\nTutor de FCT · 1º SEA\nCIFP Virgen de Las Nieves';
+const nomCorto=n=>{const[ap,no]=(n||'').split(',');const t=s=>(s||'').trim().toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());return{completo:(t(no)+' '+t(ap)).trim(),nombre:t(no).split(' ')[0]||t(ap)}};
+function tutorDe(id){const r=res[id],e=r?.emp&&S.emp[r.emp];if(!e)return{e:null,c:{}};return{e,c:(e.contactos||[]).find(c=>/tutor/i.test(c.rol))||(e.contactos||[])[0]||{}}}
+function proxHito(id,para){const s=segDe(S.alu[id]);for(const h of hitos()){const hecho=para==='tutor'?s.cuestT[h.id]?.fecha:s.cuestA[h.id];if(!hecho&&h.fecha)return h}return hitos().find(h=>!(para==='tutor'?s.cuestT[h.id]?.fecha:s.cuestA[h.id]))||{label:'',fecha:''}}
+function rellenar(t,id,para){const a=S.alu[id],{e,c}=tutorDe(id),n=nomCorto(a.nombre),h=proxHito(id,para);
+  const V={alumno:n.completo,nombre_alumno:n.nombre,empresa:e?.nombre||'',tutor:c.nombre||'',hito:(h.label||'').toLowerCase(),fecha_limite:h.fecha?fmtD(h.fecha):'lo antes posible',inicio:S.aj.fechaInicio?fmtD(S.aj.fechaInicio):'',dias_diario:segDe(a).porRellenar||'0',firma:firma()};
+  return(t||'').replace(/\{(\w+)\}/g,(m,k)=>k in V?V[k]:m)}
+const telWA=t=>{let d=(t||'').replace(/\D/g,'');if(d.length===9)d='34'+d;return d};
+let msgCtx=null;
+function openMensaje(id,pid){const a=S.alu[id];const P=plantillas();const p=P.find(x=>x.id===pid)||P[0];const{e,c}=tutorDe(id);
+  const para=p.para,to=para==='tutor'?(c.email||''):(a.email||a.email2||''),tel=para==='tutor'?(c.telefono||e?.telefono||''):(a.telefono||'');
+  msgCtx={id,p};
+  $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Mensaje</h2><button class="sec" data-backseg="${id}">← Volver</button></div>
+  <div class="grid" style="margin-top:12px"><label>Plantilla<select id="mPl">${P.map(x=>`<option value="${x.id}"${x.id===p.id?' selected':''}>${esc(x.nombre)}</option>`).join('')}</select></label>
+  <label>Para (${para==='tutor'?'tutor de empresa':'alumno'})<input id="mTo" value="${esc(to)}" placeholder="${para==='tutor'?'no consta: añádelo en la empresa':'no consta'}"></label><label>Teléfono (WhatsApp)<input id="mTel" value="${esc(tel)}"></label></div>
+  <label style="margin-top:10px">Asunto<input id="mAs" value="${esc(rellenar(p.asunto,id,para))}"></label>
+  <label style="margin-top:10px">Texto<textarea id="mTx" style="min-height:220px">${esc(rellenar(p.cuerpo,id,para))}</textarea></label>
+  ${!to&&!tel?`<p class="note bad">No hay email ni teléfono ${para==='tutor'?'del tutor (añádelo en la ficha de la empresa)':'del alumno (añádelo en su ficha)'}.</p>`:''}
+  <label class="check" style="margin-top:8px"><input type="checkbox" id="mLog" checked> Anotarlo en el registro de contactos</label>
+  <div class="row" style="margin-top:12px;gap:8px"><button class="icb" id="mMail">Abrir en el correo</button><button class="sec" id="mWA">WhatsApp</button><button class="sec" id="mCopy">Copiar texto</button><span style="flex:1"></span><button class="ghost" id="mPlants">Editar plantillas</button></div>
+  <p class="note">Se abre en tu correo con todo relleno; lo revisas y lo envías tú. Correo configurado: <b>${{mailto:'app de correo del dispositivo',outlook:'Outlook web (Microsoft 365)',gmail:'Gmail'}[S.aj.correo||'mailto']}</b>.</p>`;
+  $('#ov').classList.add('on');$('#ov').scrollTop=0}
+function logMsg(tipo){if(!$('#mLog')?.checked||!msgCtx)return;const s=segDe(S.alu[msgCtx.id]);s.contactos.push({fecha:hoyISO(),tipo,con:msgCtx.p.para==='tutor'?'Tutor de empresa':'Alumno',notas:'Mensaje: '+($('#mAs').value||msgCtx.p.nombre)});save('alumnos',msgCtx.id)}
+function abrirURL(u){const a=document.createElement('a');a.href=u;if(!u.startsWith('mailto:'))a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
+function openPlantillas(){const P=JSON.parse(JSON.stringify(plantillas()));
+  const draw=()=>{$('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Plantillas de mensajes</h2><button class="sec" id="plDone">Guardar y volver</button></div>
+  <p class="note">Puedes usar: {alumno} {nombre_alumno} {empresa} {tutor} {hito} {fecha_limite} {inicio} {dias_diario} {firma}</p>
+  <div class="grid" style="margin-top:10px"><label>Abrir los emails en<select id="plCorreo"><option value="mailto">App de correo del dispositivo</option><option value="outlook">Outlook web (Microsoft 365)</option><option value="gmail">Gmail</option></select></label></div>
+  <label style="margin-top:10px">Firma<textarea id="plFirma" style="min-height:70px">${esc(firma())}</textarea></label>
+  ${P.map((p,i)=>`<div class="contact" style="grid-template-columns:1fr;margin-top:10px"><div class="row" style="gap:8px"><input data-pl="${i}:nombre" value="${esc(p.nombre)}" style="flex:1;margin:0"><select data-pl="${i}:para" style="width:auto;margin:0"><option value="tutor"${p.para==='tutor'?' selected':''}>Al tutor</option><option value="alumno"${p.para==='alumno'?' selected':''}>Al alumno</option></select><button class="danger" data-pldel="${i}">Borrar</button></div>
+    <label>Asunto<input data-pl="${i}:asunto" value="${esc(p.asunto)}"></label><label>Texto<textarea data-pl="${i}:cuerpo" style="min-height:140px">${esc(p.cuerpo)}</textarea></label></div>`).join('')}
+  <div class="row" style="margin-top:10px"><button class="sec" id="plAdd">+ Nueva plantilla</button></div>`;$('#plCorreo').value=S.aj.correo||'mailto'};
+  draw();
+  $('#ovc').oninput=ev=>{const k=ev.target.dataset.pl;if(k){const[i,f]=k.split(':');P[+i][f]=ev.target.value}};
+  $('#ovc').onclick=ev=>{const t=ev.target;if(t.id==='plAdd'){P.push({id:'p'+Date.now().toString(36),nombre:'Nueva plantilla',para:'tutor',asunto:'',cuerpo:''});draw()}
+    if(t.dataset.pldel){P.splice(+t.dataset.pldel,1);draw()}
+    if(t.id==='plDone'){S.aj.plantillas=P;S.aj.firma=$('#plFirma').value;S.aj.correo=$('#plCorreo').value;saveCfg('ajustes',S.aj);$('#ovc').oninput=null;$('#ovc').onclick=null;toast('Plantillas guardadas');msgCtx?openMensaje(msgCtx.id,msgCtx.p.id):closeE()}}}
+document.addEventListener('change',ev=>{if(ev.target.id==='mPl'&&msgCtx)openMensaje(msgCtx.id,ev.target.value)});
+document.addEventListener('click',async ev=>{const t=ev.target.closest('#mMail,#mWA,#mCopy,#mPlants,[data-msg],[data-backseg]');if(!t)return;
+  if(t.dataset.msg){openMensaje(t.dataset.msg);return}
+  if(t.dataset.backseg){msgCtx=null;openSeg(t.dataset.backseg);return}
+  if(t.id==='mPlants')return openPlantillas();
+  const to=$('#mTo').value.trim(),as=$('#mAs').value,tx=$('#mTx').value,E=encodeURIComponent;
+  if(t.id==='mMail'){if(!to)return toast('Falta el email del destinatario');const c=S.aj.correo||'mailto';
+    abrirURL(c==='outlook'?`https://outlook.office.com/mail/deeplink/compose?to=${E(to)}&subject=${E(as)}&body=${E(tx)}`:c==='gmail'?`https://mail.google.com/mail/?view=cm&fs=1&to=${E(to)}&su=${E(as)}&body=${E(tx)}`:`mailto:${E(to)}?subject=${E(as)}&body=${E(tx)}`);logMsg('Email')}
+  if(t.id==='mWA'){const n=telWA($('#mTel').value);if(!n)return toast('Falta el teléfono');abrirURL(`https://wa.me/${n}?text=${E(tx)}`);logMsg('WhatsApp')}
+  if(t.id==='mCopy'){try{await navigator.clipboard.writeText(as?as+'\n\n'+tx:tx);toast('Texto copiado')}catch{toast('No se pudo copiar')}}});
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 
 boot();
 
