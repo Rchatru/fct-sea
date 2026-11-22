@@ -1,6 +1,6 @@
 
 {
-const S={gd:{},gdMeta:null,emp:{},alu:{},campos:[],aj:{fechaInicio:'',incluirTramite:true,criterio:'primeras'}};
+const S={gd:{},gdx:{},gdMeta:null,emp:{},alu:{},campos:[],aj:{fechaInicio:'',incluirTramite:true,criterio:'primeras'}};
 let db=null,selA=null,res=null;const M={mode:'alumno',sel:null,drag:false,focusE:null};
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -17,12 +17,13 @@ const empName=id=>S.emp[id]?`${S.emp[id].n} · ${S.emp[id].nombre}`:'';
 const sortedEmp=()=>Object.entries(S.emp).sort((a,b)=>(a[1].n||999)-(b[1].n||999));
 const sortedAlu=()=>Object.entries(S.alu).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre));
 
-function conc(e){ // estado efectivo del concierto
+function conc(e){ // estado efectivo del concierto (si GDCAN lo conoce, manda GDCAN)
+  const g=gdConc(e),k=g&&concK(g);if(k){if(k==='si'&&g.caducidad&&g.caducidad<refDate())return'cad';return k}
   if(e.concierto==='si'){if(e.caducidad&&e.caducidad<refDate())return'cad';return'si'}
   return e.concierto||'no'}
-function concTag(e){const c=conc(e);
-  if(c==='si')return`<span class="tag ok">Vigente${e.caducidad?' hasta '+fmtD(e.caducidad):''}</span>`;
-  if(c==='cad')return`<span class="tag bad">Caducado ${fmtD(e.caducidad)}</span>`;
+function concTag(e){const c=conc(e),g=gdConc(e),cad=g?.caducidad||e.caducidad;
+  if(c==='si'){const pronto=cad&&diasEntre(hoyISO(),cad)<=90;return`<span class="tag ${pronto?'wa':'ok'}" ${g?'title="Dato de GDCAN"':''}>Vigente${cad?' hasta '+fmtD(cad):''}</span>`}
+  if(c==='cad')return`<span class="tag bad">Caducado ${fmtD(cad)}</span>`;
   if(c==='tramite')return'<span class="tag wa">En trámite</span>';return'<span class="tag bad">Sin concierto</span>'}
 function cap(e){return e.plazas==null||e.plazas===''?1:+e.plazas}
 function motivoNo(a,id){const e=S.emp[id];if(!e)return'empresa borrada';if(e.activa===false)return'desactivada'+(e.motivoInactiva?' ('+e.motivoInactiva+')':'');const c=conc(e);
@@ -86,7 +87,7 @@ function renderEdA(){const box=$('#edA');if(box.contains(document.activeElement)
   const a=S.alu[selA];if(!a){box.innerHTML='<div class="card empty">Elige un alumno de la lista para ver y editar su ficha y sus preferencias.</div>';return}
   const r=res[selA];
   const info=a.estado!=='realiza'?'No entra en el reparto.':r?.emp?`Asignación actual: <b>${esc(empName(r.emp))}</b> ${r.manual?'(fijada a mano)':r.rank>=0?`(${r.rank+1}ª opción)`:''}`:'Sin empresa en el reparto actual.';
-  box.innerHTML=`<button class="ghost backA" id="backA">← Todos los alumnos</button><div class="card"><h2>${esc(a.nombre)}</h2><p class="info">${info}</p>
+  box.innerHTML=`<button class="ghost backA" id="backA">← Todos los alumnos</button><div class="card"><h2>${esc(a.nombre)}</h2><p class="info">${info}${gdAluHTML(selA)}</p>
   <div class="grid">
   <label>Apellidos, nombre<input data-f="nombre" value="${esc(a.nombre)}"></label>
   <label>Municipio<input data-f="municipio" value="${esc(a.municipio)}"></label>
@@ -135,6 +136,7 @@ function renderRes(){const rows=sortedAlu().filter(([,a])=>a.estado==='realiza')
 
 function renderEmp(){const q=$('#qe').value.toLowerCase(),f=$('#fe').value;const dm={};for(const d of demanda())dm[d.id]=d;
   const rows=sortedEmp().filter(([,e])=>(!f||(f==='act'?e.activa!==false:f==='inact'?e.activa===false:conc(e)===f))&&JSON.stringify([e.nombre,e.municipio,e.contactos]).toLowerCase().includes(q));
+  {const n=gdConcSinLista().length,b=$('#gdcBan');if(b){b.hidden=!S.gdx.conciertos;b.innerHTML=S.gdx.conciertos?`Estados de concierto leídos de GDCAN.${n?` Hay <b>${n}</b> concierto(s) vigentes del centro que no están en tu lista. <button class="linkb" id="concGd">Ver y añadir</button>`:''}`:''}}
   $('#mEmp').innerHTML=rows.map(([id,e])=>{const c=(e.contactos||[])[0]||{};return`<div class="mi click${e.activa===false?' off':''}" data-e="${id}"><div class="mi-t"><label class="sw" title="Activa"><input type="checkbox" data-act="${id}"${e.activa===false?'':' checked'} aria-label="Activa"><i></i></label><b style="flex:1">${esc(e.n+' · '+e.nombre)}</b>${dm[id]?.pide?`<span class="tag">${dm[id].pide} pide${dm[id].pide>1?'n':''}</span>`:''}</div>
     <div class="mi-s">${concTag(e)} ${e.seguimiento?`<span class="tag ${e.seguimiento==='confirma'?'ok':e.seguimiento==='rechaza'?'bad':''}">${esc(SEG[e.seguimiento].split(',')[0])}</span>`:''} ${esc(e.municipio||'')}${e.plazas!=null&&e.plazas!==''?' · '+esc(e.plazas)+' plaza(s)':''}</div></div>`}).join('')||'<p class="note">Ninguna empresa.</p>';
   $('#tEmp').innerHTML='<thead><tr><th>Activa</th><th class="n">Nº</th><th>Empresa</th><th>Municipio</th><th>Concierto</th><th class="n">Plazas</th><th>Turno</th><th>Contacto</th><th class="n">Le piden</th></tr></thead><tbody>'+rows.map(([id,e])=>{const c=(e.contactos||[])[0]||{};
@@ -142,7 +144,7 @@ function renderEmp(){const q=$('#qe').value.toLowerCase(),f=$('#fe').value;const
 
 // ---------- ficha de empresa (ventana) ----------
 let selE=null;
-function openE(id){selE=id;const e=S.emp[id];if(!e)return;
+function openE(id){selE=id;const e=S.emp[id];if(!e)return;setTimeout(()=>kmCentro(id),0);
   const f=(k,l,t='text')=>`<label>${l}<input type="${t}" data-ef="${k}" value="${esc(e[k]??'')}"></label>`;
   $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(e.nombre||'Nueva empresa')}</h2><button class="sec" id="closeOv">Cerrar</button></div>
   <div class="grid" style="margin-top:16px">${f('n','Nº','number')}${f('nombre','Nombre completo')}${f('nif','NIF')}${f('telefono','Teléfono general')}${f('municipio','Municipio')}${f('direccion','Dirección fiscal')}
@@ -150,7 +152,8 @@ function openE(id){selE=id;const e=S.emp[id];if(!e)return;
   <label>Disponible este curso<select data-ef="activa"><option value="1"${e.activa!==false?' selected':''}>Sí, activa</option><option value="0"${e.activa===false?' selected':''}>No, desactivada</option></select></label>${f('motivoInactiva','Motivo si está desactivada')}${f('caducidad','Caduca el','date')}${f('plazas','Nº de alumnos que admite','number')}
   <label>Turnos que ofrece<select data-ef="turno">${Object.entries(TURNO_E).map(([k,v])=>`<option value="${k}"${k===(e.turno||'')?' selected':''}>${v}</option>`).join('')}</select></label>
   ${S.campos.map(c=>`<label>${esc(c.label)}<input data-ex="${esc(c.id)}" value="${esc(e.extra?.[c.id]??'')}"></label>`).join('')}</div>
-  <div class="geo">${geoTxt(e.geo)}<button class="ghost" data-vermap="e:${id}">Ver en el mapa</button></div>
+  ${gdConcHTML(e)}
+  <div class="geo">${geoTxt(e.geo)}<button class="ghost" data-vermap="e:${id}">Ver en el mapa</button><span id="kmC">${kmTxt(e)}</span></div>
   <label style="margin-top:12px">Seguimiento con la empresa<select data-ef="seguimiento">${Object.entries(SEG).map(([k,v])=>`<option value="${k}"${k===(e.seguimiento||'')?' selected':''}>${v}</option>`).join('')}</select></label>
   ${(()=>{const pid=sortedAlu().filter(([,a])=>a.estado==='realiza'&&(a.prefs||[]).includes(id));const asg=sortedAlu().filter(([aid])=>res[aid]?.emp===id);
     return `<h3>Alumnado</h3><p class="note">Asignados: ${asg.length?asg.map(([,a])=>esc(a.nombre)).join(' · '):'ninguno'}</p><div class="mini" style="margin-top:8px">${pid.map(([,a])=>`<span class="tag">${a.prefs.indexOf(id)+1}ª · ${esc(a.nombre)}</span>`).join('')||'<span class="note">Ningún alumno la ha pedido.</span>'}</div>`})()}
@@ -228,9 +231,9 @@ document.addEventListener('click',async ev=>{const t=ev.target.closest('[data-a]
 $('#ov').addEventListener('click',ev=>{if(ev.target.id==='ov')closeE()});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&$('#ov').classList.contains('on'))closeE()});
 
-function route(){const h=(location.hash||'#alumnos').slice(1);const v=['alumnos','asignacion','empresas','seguimiento','mapa'].includes(h)?h:'alumnos';$('#kpis').style.display=v==='mapa'||v==='seguimiento'?'none':'';
+function route(){const h=(location.hash||'#alumnos').slice(1);const v=['alumnos','asignacion','empresas','seguimiento','visitas','mapa'].includes(h)?h:'alumnos';$('#kpis').style.display=v==='mapa'||v==='seguimiento'||v==='visitas'?'none':'';
   document.querySelectorAll('.view').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
-  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+v));$('#ptitle').textContent={alumnos:'Alumnos',asignacion:'Asignación',empresas:'Empresas',seguimiento:'Seguimiento',mapa:'Mapa'}[v];$('#psub').textContent={alumnos:'Ficha de cada alumno: si hace la FCT, turno y sus preferencias de empresa.',asignacion:'Reparto automático según las preferencias, con ajustes manuales.',empresas:'Base de datos de empresas colaboradoras, conciertos y contactos.',seguimiento:'Horas, diarios, cuestionarios y contactos con las empresas durante las prácticas.',mapa:'Dónde vive cada alumno y dónde están las empresas que ha pedido.'}[v];if(v==='mapa')setTimeout(abrirMapa,30)}
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on',a.hash==='#'+v));$('#ptitle').textContent={alumnos:'Alumnos',asignacion:'Asignación',empresas:'Empresas',seguimiento:'Seguimiento',visitas:'Visitas',mapa:'Mapa'}[v];$('#psub').textContent={visitas:'Planifica las visitas a empresas en el menor número de días.',alumnos:'Ficha de cada alumno: si hace la FCT, turno y sus preferencias de empresa.',asignacion:'Reparto automático según las preferencias, con ajustes manuales.',empresas:'Base de datos de empresas colaboradoras, conciertos y contactos.',seguimiento:'Horas, diarios, cuestionarios y contactos con las empresas durante las prácticas.',mapa:'Dónde vive cada alumno y dónde están las empresas que ha pedido.'}[v];if(v==='mapa')setTimeout(abrirMapa,30)}
 addEventListener('hashchange',route);route();
 
 // ---------- utilidades ----------
@@ -287,10 +290,10 @@ async function seguridad(){const{data:fs}=await SB.auth.mfa.listFactors();const 
 // ---------- carga y sincronización ----------
 async function cargar(){$('#load').style.display='block';$('#load').textContent='Cargando datos…';
   const r=await SB.from('docs').select('col,id,data').range(0,9999);if(r.error){$('#load').textContent='Error al leer datos: '+r.error.message;return}
-  S.emp={};S.alu={};S.gd={};S.gdMeta=null;for(const d of r.data){if(d.col==='gdcan'){S.gd[d.id]=d.data;continue}if(d.col==='gdcan_meta'){S.gdMeta=d.data;continue}if(d.col==='empresas')S.emp[d.id]=d.data;else if(d.col==='alumnos')S.alu[d.id]=d.data;else if(d.col==='config'){if(d.id==='campos')S.campos=d.data.lista||[];if(d.id==='ajustes')S.aj={...S.aj,...d.data}}}
+  S.emp={};S.alu={};S.gd={};S.gdx={};S.gdMeta=null;for(const d of r.data){if(d.col==='gdcan'){S.gd[d.id]=d.data;continue}if(d.col==='gdcan_meta'){if(d.id==='estado')S.gdMeta=d.data;else S.gdx[d.id]=d.data;continue}if(d.col==='empresas')S.emp[d.id]=d.data;else if(d.col==='alumnos')S.alu[d.id]=d.data;else if(d.col==='config'){if(d.id==='campos')S.campos=d.data.lista||[];if(d.id==='ajustes')S.aj={...S.aj,...d.data}}}
   if(!r.data.length){$('#load').innerHTML='<div class="card" style="text-align:left"><h2>La base de datos está vacía</h2><p>Importa la copia de seguridad que descargaste de la versión anterior (archivo <code>FCT_1SEA_copia_….json</code>).</p><button id="restore">Importar copia</button></div>'}
   else $('#load').style.display='none';
-  $('#edA')._id=null;render();if(location.hash==='#mapa')abrirMapa()}
+  autoGdcan();$('#edA')._id=null;render();if(location.hash==='#mapa')abrirMapa();if(location.hash==='#visitas')abrirVisitas()}
 document.addEventListener('click',ev=>{const t=ev.target.closest('#cfgBtn,[data-run]');if(!t)return;
   if(t.id==='cfgBtn'){$('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Cuenta y datos</h2><button class="sec" id="closeOv">Cerrar</button></div>
     <p class="note" style="margin-top:10px">${esc($('#saveSt').lastChild.textContent)} · ${esc($('#uMail').textContent)}</p>
@@ -395,7 +398,7 @@ const hoyISO=()=>new Date().toISOString().slice(0,10);
 const diasEntre=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
 const segDe=a=>{a.seg??={};const s=a.seg;s.cuestA??={};s.cuestT??={};s.contactos??=[];return s};
 function estHito(hecho,h){if(hecho)return'ok';if(!h.fecha)return'';const d=diasEntre(hoyISO(),h.fecha);return d<0?'bad':d<=7?'wa':''}
-function segAvisos(){const av=[...gdAvisos()];const H=hitos();
+function segAvisos(){const av=[...gdAvisos(),...gdAvisosPropios()];const H=hitos();
   for(const[id,a]of sortedAlu()){if(a.estado!=='realiza')continue;const s=segDe(a),r=res[id];
     for(const h of H){if(estHito(s.cuestA[h.id],h)==='bad')av.push([id,`${a.nombre}: falta el cuestionario ${h.label.toLowerCase()} del alumno (vencía ${fmtD(h.fecha)})`]);
       if(estHito(s.cuestT[h.id]?.fecha,h)==='bad')av.push([id,`${a.nombre}: falta el seguimiento ${h.label.toLowerCase()} con el tutor de empresa${r?.emp?' ('+S.emp[r.emp]?.nombre+')':''}`])}
@@ -409,7 +412,7 @@ function renderSeg(){const box=$('#segBox');if(!box)return;const H=hitos();const
   const obj=horasObj();
   const avs=segAvisos(),hechos=rows.reduce((n,[,a])=>n+H.filter(h=>segDe(a).cuestA[h.id]).length,0),totQ=rows.length*H.length;
   const sinFechas=H.every(h=>!h.fecha);
-  const cards=rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp];const hc=+(s.horasConf||gdDe(id)?.horasConf)||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
+  const cards=rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp];const hc=horasDe(id,s),pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
     const pend=avs.filter(x=>x[0]===id).length;
     return`<button class="scard" data-seg="${id}"><div class="sc-top"><b>${esc(a.nombre)}</b>${pend?`<span class="tag bad">${pend}</span>`:'<span class="tag ok">al día</span>'}</div>
       <small class="note">${e?esc(e.nombre):'Sin empresa asignada'}</small>
@@ -421,10 +424,11 @@ function renderSeg(){const box=$('#segBox');if(!box)return;const H=hitos();const
     <div class="kpi"><div class="ic c-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div><div class="t"><b>${hechos} / ${totQ}</b><span>cuestionarios de alumnos hechos</span></div></div></div>
   <div class="card calstrip"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>Calendario</b><button class="ghost" id="segCal">${sinFechas?'Poner fechas y horas':'Editar'}</button></div>
     ${sinFechas?'<p class="note" style="margin:0">Aún no hay fechas límite. Ponlas para que la web te avise de lo que vence.</p>':`<div class="hitos">${H.map(h=>`<div class="hito ${h.fecha&&h.fecha<hoyISO()?'pas':''}"><small>${h.label.replace('Intermedio ','Int. ')}</small><b>${h.fecha?fmtD(h.fecha).slice(0,5):'—'}</b></div>`).join('')}</div>`}</div>
+  ${avs.length?`<details class="card avbox" ${avs.length<=6?'open':''}><summary><b>Pendientes (${avs.length})</b></summary><ul class="avl2">${avs.map(([id,t])=>`<li>${id?`<a href="#seguimiento" data-segav="${esc(id)}">${esc(t)}</a>`:esc(t)}</li>`).join('')}</ul></details>`:''}
   <div class="scards">${cards||'<p class="note">Ningún alumno hará la FCT todavía.</p>'}</div>
   <div class="segtbl"><div class="tbl scroll"><table><thead><tr><th>Alumno</th><th>Empresa · tutor</th><th>Horas</th><th class="n">Por rellenar</th><th>Anexos</th><th>Cuestionarios alumno</th><th>Seguimiento tutor</th><th>Último contacto</th></tr></thead><tbody>
   ${rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp],hcG=gdDe(id)?.horasConf,tut=(e?.contactos||[]).find(c=>/tutor/i.test(c.rol))||(e?.contactos||[])[0];
-    const hc=+(s.horasConf||gdDe(id)?.horasConf)||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
+    const hc=horasDe(id,s),pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
     return`<tr class="click" data-seg="${id}"><td>${esc(a.nombre)}</td><td>${e?esc(e.nombre):'<span class="note">sin asignar</span>'}${tut?.nombre?`<br><small class="note">${esc(tut.nombre)}</small>`:''}</td>
     <td class="nw">${obj?`<div class="bars" style="width:90px"><i style="width:${pct}%;background:${pct>=100?'#0f7b0f':'#005fb8'}"></i></div><small>${hc} / ${obj} h</small>`:`<small>${hc?hc+' h':'—'}</small>`}</td>
     <td class="n">${+s.porRellenar?`<span class="tag bad">${s.porRellenar}</span>`:'<small class="note">—</small>'}</td>
@@ -482,8 +486,10 @@ const PLANT_DEF=[
  {id:'p1',nombre:'Recordatorio de cuestionario (tutor de empresa)',para:'tutor',asunto:'FCT {alumno} · cuestionario {hito}',cuerpo:'Buenos días, {tutor}:\n\nLe escribo como tutor de FCT de {alumno}, que realiza sus prácticas en {empresa}. Le recuerdo que tiene pendiente el cuestionario de seguimiento {hito} en GDCAN (fecha límite: {fecha_limite}).\n\nSi tiene cualquier duda o incidencia, quedo a su disposición.\n\nUn saludo,\n{firma}'},
  {id:'p2',nombre:'Presentación al inicio (tutor de empresa)',para:'tutor',asunto:'Prácticas FCT de {alumno} · CIFP Virgen de Las Nieves',cuerpo:'Buenos días, {tutor}:\n\nSoy el tutor de FCT del ciclo de Sistemas Electrotécnicos y Automatizados del CIFP Virgen de Las Nieves. {alumno} comenzará sus prácticas en {empresa} el {inicio}.\n\nEstaré en contacto durante el periodo de prácticas para hacer el seguimiento. Para cualquier cuestión puede escribirme a este correo.\n\nMuchas gracias por su colaboración.\n\nUn saludo,\n{firma}'},
  {id:'p3',nombre:'Diario sin rellenar (alumno)',para:'alumno',asunto:'FCT · diario de actividades pendiente',cuerpo:'Hola, {nombre_alumno}:\n\nTienes {dias_diario} día(s) del diario de actividades sin rellenar en GDCAN. Por favor, ponte al día lo antes posible.\n\nUn saludo,\n{firma}'},
+ {id:'p5',nombre:'Diario al día para el cuestionario (alumno)',para:'alumno',asunto:'FCT · pon el diario al día',cuerpo:'Hola, {nombre_alumno}:\n\nPara que a tu tutor/a de empresa le llegue el cuestionario de seguimiento de GDCAN, tu diario tiene que estar cumplimentado hasta hoy. Por favor, ponlo al día cuanto antes.\n\nRecuerda también que solo cuentan las horas de los días marcados como cumplimentados.\n\nUn saludo,\n{firma}'},
+ {id:'p6',nombre:'Aviso del cuestionario: spam y una sola vez (tutor de empresa)',para:'tutor',asunto:'FCT {alumno} · cuestionario de seguimiento de GDCAN',cuerpo:'Buenos días, {tutor}:\n\nLe llegará (o le habrá llegado) por correo el cuestionario de seguimiento {hito} de {alumno} desde GDCAN. Si no lo encuentra, revise la carpeta de spam o correo no deseado.\n\nTenga en cuenta que el cuestionario solo se puede enviar una vez y después no se puede modificar, así que le ruego que repase las respuestas antes de guardarlo.\n\nMuchas gracias. Un saludo,\n{firma}'},
  {id:'p4',nombre:'Recordatorio de cuestionario (alumno)',para:'alumno',asunto:'FCT · cuestionario {hito} pendiente',cuerpo:'Hola, {nombre_alumno}:\n\nTe recuerdo que tienes pendiente el cuestionario {hito} en GDCAN (fecha límite: {fecha_limite}).\n\nUn saludo,\n{firma}'}];
-const plantillas=()=>S.aj.plantillas?.length?S.aj.plantillas:PLANT_DEF;
+const plantillas=()=>{if(!S.aj.plantillas?.length)return PLANT_DEF;const ids=new Set(S.aj.plantillas.map(p=>p.id));return[...S.aj.plantillas,...PLANT_DEF.filter(p=>!ids.has(p.id)&&!(S.aj.plBorradas||[]).includes(p.id))]};
 const firma=()=>S.aj.firma??'Roberto Chávez Trujillo\nTutor de FCT · 1º SEA\nCIFP Virgen de Las Nieves';
 const nomCorto=n=>{const[ap,no]=(n||'').split(',');const t=s=>(s||'').trim().toLowerCase().replace(/(^|\s)\S/g,c=>c.toUpperCase());return{completo:(t(no)+' '+t(ap)).trim(),nombre:t(no).split(' ')[0]||t(ap)}};
 function tutorDe(id){const r=res[id],e=r?.emp&&S.emp[r.emp];if(!e)return{e:null,c:{}};return{e,c:(e.contactos||[]).find(c=>/tutor/i.test(c.rol))||(e.contactos||[])[0]||{}}}
@@ -519,7 +525,7 @@ function openPlantillas(){const P=JSON.parse(JSON.stringify(plantillas()));
   draw();
   $('#ovc').oninput=ev=>{const k=ev.target.dataset.pl;if(k){const[i,f]=k.split(':');P[+i][f]=ev.target.value}};
   $('#ovc').onclick=ev=>{const t=ev.target;if(t.id==='plAdd'){P.push({id:'p'+Date.now().toString(36),nombre:'Nueva plantilla',para:'tutor',asunto:'',cuerpo:''});draw()}
-    if(t.dataset.pldel){P.splice(+t.dataset.pldel,1);draw()}
+    if(t.dataset.pldel){const x=P.splice(+t.dataset.pldel,1)[0];if(x?.id)(S.aj.plBorradas??=[]).push(x.id);draw()}
     if(t.id==='plDone'){S.aj.plantillas=P;S.aj.firma=$('#plFirma').value;S.aj.correo=$('#plCorreo').value;saveCfg('ajustes',S.aj);$('#ovc').oninput=null;$('#ovc').onclick=null;toast('Plantillas guardadas');msgCtx?openMensaje(msgCtx.id,msgCtx.p.id):closeE()}}}
 document.addEventListener('change',ev=>{if(ev.target.id==='mPl'&&msgCtx)openMensaje(msgCtx.id,ev.target.value)});
 document.addEventListener('click',async ev=>{const t=ev.target.closest('#mMail,#mWA,#mCopy,#mPlants,[data-msg],[data-backseg]');if(!t)return;
@@ -561,10 +567,12 @@ function gdFecha(){const m=S.gdMeta;if(!m)return'';const d=new Date(m.fecha);ret
 function gdBanner(){const m=S.gdMeta;if(!m)return'<div class="gdban">GDCAN: aún no hay ninguna lectura.</div>';
   return m.ok?`<div class="gdban ok">GDCAN leído el ${esc(gdFecha())} · ${esc(m.practicas??0)} práctica(s)</div>`:`<div class="gdban bad">Última lectura de GDCAN con problemas (${esc(gdFecha())}): ${esc(m.error||(m.errores||[]).join('; ')||'error')}</div>`}
 const tick=v=>v===true?'<span class="tag ok">✓</span>':v===false?'<span class="tag bad">✗</span>':'<span class="tag">?</span>';
-function gdResumen(g){return`${esc(g.horasConf??0)}/${esc(g.horasPrev??'?')} h · Horario ${tick(g.horario)} Plan ${tick(g.plan)} Calendario ${tick(g.calendario)}`}
+function gdResumen(g){const ss=ssInfo(g.estadoSS),hd=horasDiario(g);return`${ss?`<span class="tag ${ss[0]}">${esc(ss[1])}</span> · `:''}${esc(hd?hd.h:(g.horasConf??0))}/${esc(g.horasPrev??'?')} h${hd?.noAs?' · '+hd.noAs+' día(s) sin asistir':''} · Horario ${tick(g.horario)} Plan ${tick(g.plan)} Calendario ${tick(g.calendario)}`}
 function gdAvisos(){const av=[];for(const[id,a]of sortedAlu()){if(a.estado!=='realiza')continue;const g=gdDe(id);if(!g)continue;
     const ge=gdEmpresa(g);if(res[id]?.emp&&ge&&ge!==res[id].emp)av.push([id,`${a.nombre}: en GDCAN figura en otra empresa (${g.empresa})`]);
-    if(g.inicio&&diasEntre(hoyISO(),g.inicio)<=7){for(const[k,l]of[['horario','horario'],['plan','plan formativo'],['calendario','calendario']])if(g[k]===false)av.push([id,`${a.nombre}: falta el ${l} en GDCAN (empieza el ${fmtD(g.inicio)})`])}}
+    const ss=ssInfo(g.estadoSS);if(ss&&ss[0]==='bad')av.push([id,`${a.nombre}: ${ss[1]}`]);else if(g.inicio&&diasEntre(hoyISO(),g.inicio)<=3&&ss&&ss[0]!=='ok')av.push([id,`${a.nombre}: empieza el ${fmtD(g.inicio)} y aún no tiene el alta correcta en la Seguridad Social`]);
+    const hd=horasDiario(g);if(hd?.corregir)av.push([id,`${a.nombre}: ${hd.corregir} día(s) del diario corregidos por el alumno; acepta la corrección en GDCAN para que cuenten las horas`]);
+    if(!S.gdx.avisos&&g.inicio&&diasEntre(hoyISO(),g.inicio)<=7){for(const[k,l]of[['horario','horario'],['plan','plan formativo'],['calendario','calendario']])if(g[k]===false)av.push([id,`${a.nombre}: falta el ${l} en GDCAN (empieza el ${fmtD(g.inicio)})`])}}
   return av}
 function gdEmpresa(g){const c=GEO.norm(g.ficha?.empresa?.cif||''),n=tokens((g.ficha?.empresa?.nombre||g.empresa||'').split('/')[0]);for(const[eid,e]of Object.entries(S.emp)){if(c&&GEO.norm(e.nif||'')===c)return eid}for(const[eid,e]of Object.entries(S.emp)){if(n&&tokens(e.nombre).replace(/\b(sa|sl|slu|sau)\b/g,'').trim()===n.replace(/\b(sa|sl|slu|sau)\b/g,'').trim())return eid}return null}
 function gdFichaHTML(id){const g=gdDe(id);if(!g)return`<h3>GDCAN</h3><p class="note">Sin práctica en GDCAN todavía.</p>`;const f=g.ficha||{},e=f.empresa||{};
@@ -578,6 +586,167 @@ document.addEventListener('click',ev=>{const t=ev.target.closest('[data-gdtutor]
   const tu=g.ficha.empresa;e.contactos??=[];const ya=e.contactos.find(c=>GEO.norm(c.nombre)===GEO.norm(tu.tutor)||(tu.tutorEmail&&c.email===tu.tutorEmail));
   if(ya){ya.rol=ya.rol||'Tutor/a de empresa';if(!ya.email&&tu.tutorEmail)ya.email=tu.tutorEmail}else e.contactos.unshift({nombre:tu.tutor,rol:'Tutor/a de empresa',telefono:'',email:tu.tutorEmail||''});
   save('empresas',eid);toast('Tutor añadido a '+e.nombre)});
+
+// ---------- GDCAN: conciertos, alumnado, Seguridad Social, avisos y horas ----------
+const nCif=s=>GEO.norm(s||'').replace(/[^a-z0-9]/g,'');
+const tkE=s=>tokens((s||'').split('/')[0]).split(' ').filter(w=>!/^(sa|sl|slu|sau|slp|sll|sc|scl|sociedad|limitada|anonima|de|del|la|las|los|y)$/.test(w)).join(' ');
+function gdConc(e){const L=S.gdx?.conciertos?.lista;if(!L||!e)return null;const c=nCif(e.nif);
+  let m=c?L.filter(x=>nCif(x.cif)===c):[];if(!m.length){const n=tkE(e.nombre);if(n)m=L.filter(x=>tkE(x.empresa)===n)}
+  if(!m.length)return null;const r=x=>({si:0,tramite:1,cad:2}[concK(x)]??3);
+  return[...m].sort((a,b)=>r(a)-r(b)||(b.caducidad||'').localeCompare(a.caducidad||''))[0]}
+function concK(g){const n=GEO.norm(g.estado||'');if(/caduc/.test(n))return'cad';if(/tramite|solicit|pendiente|firma/.test(n))return'tramite';if(/vigente|activo|firmado|aprobado/.test(n))return'si';return null}
+function gdConcHTML(e){const g=gdConc(e);if(!S.gdx?.conciertos)return'';
+  if(!g)return`<p class="note">GDCAN: no encuentro un concierto para esta empresa${e.nif?'':' (pon el NIF/CIF para que la búsqueda sea exacta)'}. Se usa el estado que pongas arriba.</p>`;
+  return`<p class="info" style="margin:10px 0 0">GDCAN: <b>${esc(g.estado||'—')}</b>${g.tipo?' · '+esc(g.tipo):''}${g.fecha?' · firmado '+fmtD(g.fecha):''}${g.caducidad?' · caduca '+fmtD(g.caducidad):''}${g.cif?' · CIF '+esc(g.cif):''}<br><small class="note">Este dato manda sobre el estado que pongas a mano.</small></p>`}
+function gdAlu(id){const a=S.alu[id],L=S.gdx?.alumnos?.lista;if(!a||!L)return null;const d=(a.dni||'').toUpperCase();
+  return(d&&L.find(x=>(x.dni||'').toUpperCase()===d))||L.find(x=>tokens(x.nombre)===tokens(a.nombre))||null}
+function gdAluHTML(id){const x=gdAlu(id),g=gdDe(id);const p=[];
+  if(x)p.push(`GDCAN: sin práctica creada${x.matricula?' · matrícula '+esc(x.matricula):''}${x.grupo?' · '+esc(x.grupo):''}`);
+  else if(g){const ss=ssInfo(g.estadoSS);p.push(`GDCAN: práctica en ${esc(g.empresa||'—')}${ss?` · <span class="tag ${ss[0]}">${esc(ss[1])}</span>`:''}`)}
+  return p.length?'<br>'+p.join('<br>'):''}
+// Rellena datos vacíos con lo que trae GDCAN (nunca pisa lo que ya escribiste)
+function autoGdcan(){
+  for(const[id,a]of Object.entries(S.alu)){let ch=false;const x=gdAlu(id),f=gdDe(id)?.ficha?.alumno;
+    const dni=(x?.dni||f?.dni||'').toUpperCase(),tel=x?.telefono||f?.telefono,em=x?.email||f?.email;
+    if(dni&&!a.dni){a.dni=dni;ch=true}if(tel&&!a.telefono){a.telefono=tel;ch=true}
+    if(em&&GEO.norm(a.email)!==GEO.norm(em)&&GEO.norm(a.email2)!==GEO.norm(em)){if(!a.email){a.email=em;ch=true}else if(!a.email2){a.email2=em;ch=true}}
+    if(ch)save('alumnos',id)}
+  for(const[id,e]of Object.entries(S.emp)){if(e.nif)continue;const g=gdConc(e);if(g?.cif){e.nif=g.cif;save('empresas',id)}}}
+function ssInfo(s){const n=GEO.norm(s||'');if(!n)return null;if(/alta correcta/.test(n))return['ok','Alta en la S. Social'];if(/no enviada/.test(n))return['','No enviada a la S. Social'];
+  if(/pendiente|enviada/.test(n))return['wa','Enviada a la S. Social, sin respuesta'];if(/baja/.test(n))return['','Baja en la S. Social'];return['bad','Incidencia en la S. Social: '+s]}
+const hhmm=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/g);if(!m||m.length<2)return 0;const[a,b]=m.map(x=>{const[h,mi]=x.split(':');return+h*60+ +mi});return Math.max(0,b-a)};
+function horasDiario(g){const D=g?.ficha?.diario?.dias;if(!D?.length)return null;let min=0,corregir=0,noAs=0,pend=0;
+  for(const d of D){const n=GEO.norm(d.estado||'');if(/no asiste/.test(n)){noAs++;continue}if(/corregid/.test(n)){corregir++;continue}
+    if(/cumplimentad/.test(n)&&!/sin cumpliment|no cumpliment/.test(n)){min+=hhmm(d.manana)+hhmm(d.tarde);continue}pend++}
+  return{h:Math.round(min/6)/10,corregir,noAs,pend}}
+function horasDe(id,s){const g=gdDe(id),hd=horasDiario(g);if(hd)return hd.h;if(g&&g.horasConf!=null)return+g.horasConf||0;return+s.horasConf||0}
+function gdAvisosPropios(){const L=S.gdx?.avisos?.lista||[];return L.map(x=>{const id=Object.keys(S.alu).find(k=>{const a=S.alu[k];return x.dni&&((a.dni||'').toUpperCase()===x.dni||Object.keys(S.gd).includes(x.dni)&&gdDe(k)===S.gd[x.dni])})||null;
+  return[id,'GDCAN'+(x.tipo?' ('+x.tipo+')':'')+': '+x.aviso]})}
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-segav]');if(!t)return;ev.preventDefault();openSeg(t.dataset.segav)});
+function gdConcSinLista(){const L=S.gdx?.conciertos?.lista||[];const nuestros=new Set(Object.values(S.emp).map(e=>nCif(e.nif)).filter(Boolean)),nn=new Set(Object.values(S.emp).map(e=>tkE(e.nombre)));
+  const vistos=new Set();return L.filter(x=>concK(x)==='si'&&!nuestros.has(nCif(x.cif))&&!nn.has(tkE(x.empresa))&&!vistos.has(nCif(x.cif)||x.empresa)&&vistos.add(nCif(x.cif)||x.empresa))}
+function openConcGd(){const L=gdConcSinLista();let q='';
+  const draw=()=>{const F=L.filter(x=>!q||GEO.norm(x.empresa+' '+x.cif).includes(GEO.norm(q))).slice(0,80);
+    $('#cgL').innerHTML=F.map(x=>`<div class="mi"><div class="mi-t"><b>${esc(x.empresa)}</b><button class="ghost" data-cgadd="${esc(x.cif||x.empresa)}">Añadir</button></div><div class="mi-s">${esc(x.cif||'')}${x.caducidad?' · caduca '+fmtD(x.caducidad):''}${x.tipo?' · '+esc(x.tipo):''}</div></div>`).join('')||'<p class="note">Nada que coincida.</p>'};
+  $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Conciertos vigentes del centro que no tienes</h2><button class="sec" id="closeOv">Cerrar</button></div>
+    <p class="note">Son todos los conciertos vigentes del CIFP en GDCAN (de cualquier familia profesional) que no están en tu lista. Busca y añade los que te interesen.</p>
+    <input id="cgQ" placeholder="Buscar por nombre o CIF…" style="margin:10px 0"><div id="cgL" style="display:grid;gap:6px"></div>`;
+  $('#ov').classList.add('on');draw();$('#cgQ').oninput=e=>{q=e.target.value;draw()};
+  $('#cgL').onclick=e=>{const b=e.target.closest('[data-cgadd]');if(!b)return;const x=L.find(y=>(y.cif||y.empresa)===b.dataset.cgadd);if(!x)return;
+    const id='e'+Date.now().toString(36),n=Math.max(0,...Object.values(S.emp).map(e=>+e.n||0))+1;
+    S.emp[id]={n,nombre:x.empresa,telefono:'',nif:x.cif||'',direccion:'',municipio:'',concierto:'si',caducidad:x.caducidad||'',plazas:null,turno:'',observaciones:'',contactos:[],extra:{}};
+    save('empresas',id);L.splice(L.indexOf(x),1);draw();render();toast('Añadida: '+x.empresa)}}
+document.addEventListener('click',ev=>{if(ev.target.closest('#concGd'))openConcGd()});
+
+// ---------- distancia desde el centro ----------
+const CENTRO={lat:28.69516,lng:-17.76626,nombre:'CIFP Virgen de Las Nieves'}; // Barranco del Carmen 5, S/C de La Palma
+const fmtKm=k=>k==null?'—':(Math.round(k*10)/10).toLocaleString('es-ES')+' km';
+const fmtMin=m=>{m=Math.round(m);return m<60?m+' min':Math.floor(m/60)+' h '+String(m%60).padStart(2,'0')+' min'};
+const geoK=g=>g?g.lat.toFixed(5)+','+g.lng.toFixed(5):'';
+function kmTxt(e){const k=e.kmCentro;return k&&k.g===geoK(e.geo)?` · Desde el CIFP: <b>${fmtKm(k.km)}</b> (${fmtMin(k.min)}), ida y vuelta ${fmtKm(k.km*2)}`:''}
+async function kmCentro(id){const e=S.emp[id];if(!e?.geo||(e.kmCentro&&e.kmCentro.g===geoK(e.geo)))return;
+  try{const r=await(await fetch(`https://router.project-osrm.org/route/v1/driving/${CENTRO.lng},${CENTRO.lat};${e.geo.lng},${e.geo.lat}?overview=false`)).json();
+    if(r.code==='Ok'){const cur=S.emp[id];if(!cur)return;cur.kmCentro={km:r.routes[0].distance/1000,min:r.routes[0].duration/60,g:geoK(cur.geo)};save('empresas',id);const k=$('#kmC');if(k&&selE===id)k.innerHTML=kmTxt(cur)}}catch{}}
+
+// ---------- Visitas: agrupar empresas en el menor número de días ----------
+const VIS_DEF={sel:null,salida:'08:30',fin:'13:30',svc:30,plan:null,fechas:{}};
+const V=()=>{const v=S.aj.visitas??={};for(const[k,x]of Object.entries(VIS_DEF))if(!(k in v))v[k]=x&&typeof x==='object'?{...x}:x;return v};
+const DIA_COL=['#3b5bdb','#e8590c','#2b8a3e','#ae3ec9','#c92a2a','#0c8599','#5c940d','#d6336c'];
+let vmap=null,vcapa=null,vMat=null,vCalc=false;
+const toMin=t=>{const[h,m]=(t||'0:0').split(':').map(Number);return h*60+(m||0)};
+const deMin=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(Math.round(m%60)).padStart(2,'0');
+function visEmpresas(){const m=new Map();for(const[aid,a]of sortedAlu()){if(a.estado!=='realiza')continue;const e=res[aid]?.emp;if(!e||!S.emp[e])continue;if(!m.has(e))m.set(e,[]);m.get(e).push(aid)}return m}
+function ultimaVisita(eid,als){let u='';for(const aid of als||[]){for(const c of segDe(S.alu[aid]).contactos)if(c.tipo==='Visita'&&c.fecha>u)u=c.fecha}return u}
+function abrirVisitas(){renderVisitas();setTimeout(()=>{if(!window.L||!$('#vmap'))return;if(!vmap){vmap=L.map('vmap',{zoomSnap:.5}).setView([28.67,-17.86],10.5);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(vmap);vcapa=L.layerGroup().addTo(vmap)}vmap.invalidateSize();dibujarVisitas()},50)}
+function renderVisitas(){const box=$('#visBox');if(!box)return;const v=V(),EM=visEmpresas();if(v.sel==null)v.sel=[...EM.keys()];
+  const sel=new Set(v.sel),ids=[...new Set([...EM.keys(),...v.sel])].filter(id=>S.emp[id]);
+  const sinGeo=ids.filter(id=>sel.has(id)&&!S.emp[id].geo);
+  const fila=id=>{const e=S.emp[id],als=EM.get(id)||[],u=ultimaVisita(id,als),tur=[...new Set(als.map(a=>TURNO_A[S.alu[a].turno]).filter(x=>x&&!/indiferente|cualquiera/i.test(x)))];
+    return`<label class="vrow"><input type="checkbox" data-vsel="${id}"${sel.has(id)?' checked':''}><span><b>${esc(e.nombre)}</b><small>${esc(e.municipio||'')}${als.length?' · '+als.length+' alumno(s)':''}${tur.length?' · '+esc(tur.join('/')):''}${u?' · visitada '+fmtD(u):''}${e.geo?'':' · <span style="color:var(--bai)">sin ubicar</span>'}</small></span></label>`};
+  const plan=v.plan&&v.plan.filter(d=>d.paradas.length);
+  box.innerHTML=`<div class="visgrid"><div>
+    <div class="card"><h2>1. Qué empresas visitar</h2><p class="note">Por defecto, las que tienen alumnos asignados. Marca o desmarca.</p>
+      <div class="vlist">${ids.map(fila).join('')||'<p class="note">Aún no hay alumnos asignados a empresas.</p>'}</div>
+      <div class="row" style="margin-top:10px"><select id="vAdd" style="flex:1;margin:0"><option value="">+ Añadir otra empresa…</option>${Object.entries(S.emp).filter(([id,e])=>!ids.includes(id)&&e.activa!==false).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre)).map(([id,e])=>`<option value="${id}">${esc(e.nombre)}</option>`).join('')}</select></div>
+      ${sinGeo.length?`<p class="note bad">${sinGeo.length} empresa(s) sin ubicar no entran en la ruta. Ubícalas desde la pestaña Mapa.</p>`:''}</div>
+    <div class="card" style="margin-top:12px"><h2>2. Tu jornada</h2><div class="grid">
+      <label>Salida del CIFP<input type="time" data-vk="salida" value="${esc(v.salida)}"></label><label>Hora límite de vuelta<input type="time" data-vk="fin" value="${esc(v.fin)}"></label>
+      <label>Minutos en cada empresa<input type="number" min="5" step="5" data-vk="svc" value="${esc(v.svc)}"></label></div>
+      <button id="vCalc" style="margin-top:12px;width:100%">${vCalc?'Calculando…':'Calcular rutas'}</button></div>
+    <p class="note" style="margin-top:10px">Comisión de servicio en GDCAN: registra cada visita <b>el mismo día</b> (no admite fechas pasadas). Los km de cada tramo de abajo son los que te pedirá.</p>
+  </div><div><div id="vmap"></div>
+    <div id="vPlan">${plan?.length?plan.map((d,i)=>diaHTML(d,i,plan.length)).join(''):'<div class="card empty">Marca las empresas y pulsa <b>Calcular rutas</b>.</div>'}</div></div></div>`}
+function diaHTML(d,i,n){const v=V(),c=DIA_COL[i%DIA_COL.length];let t=toMin(v.salida);const L=[];let km=0;
+  const legs=d.legs||[];
+  d.paradas.forEach((eid,k)=>{const lg=legs[k]||{};t+=lg.min||0;km+=lg.km||0;const e=S.emp[eid],als=visEmpresas().get(eid)||[];
+    const tut=(e?.contactos||[]).find(x=>/tutor/i.test(x.rol))||(e?.contactos||[])[0];
+    L.push(`<li><span class="vh">${deMin(t)}</span><div><b>${esc(e?.nombre||'?')}</b><small>${fmtKm(lg.km)} · ${fmtMin(lg.min||0)} desde ${k?'la anterior':'el CIFP'}${als.length?' · '+als.map(a=>esc(S.alu[a].nombre.split(',').reverse().join(' ').trim())).join(', '):''}${tut?.telefono?` · <a href="tel:${esc(tut.telefono.replace(/\s/g,''))}">${esc(tut.nombre||'tutor')} ${esc(tut.telefono)}</a>`:''}</small>
+      <select data-vmove="${i}:${k}" class="vmv"><option value="">Mover…</option>${Array.from({length:n+1},(_,j)=>j===i?'':`<option value="${j}">${j<n?'al día '+(j+1):'a un día nuevo'}</option>`).join('')}<option value="x">Quitar de la ruta</option></select></div></li>`);
+    t+=+v.svc||0});
+  const vu=legs[d.paradas.length]||{};t+=vu.min||0;km+=vu.km||0;const tarde=t>toMin(v.fin);
+  const pts=[CENTRO,...d.paradas.map(e=>S.emp[e]?.geo).filter(Boolean),CENTRO];
+  const gm='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+pts[0].lat+','+pts[0].lng+'&destination='+CENTRO.lat+','+CENTRO.lng+(pts.length>2?'&waypoints='+encodeURIComponent(pts.slice(1,-1).map(g=>g.lat+','+g.lng).join('|')):'');
+  const f=v.fechas[i]||'';
+  return`<div class="card vdia" style="border-top:4px solid ${c}"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Día ${i+1}</h2>
+    <input type="date" data-vfecha="${i}" value="${esc(f)}" style="width:auto;margin:0"></div>
+    <p class="note">${d.paradas.length} empresa(s) · ${fmtKm(km)} en total · vuelta a las <b${tarde?' style="color:var(--bai)"':''}>${deMin(t)}</b>${tarde?' (pasa de la hora límite)':''}</p>
+    <ol class="vtl"><li><span class="vh">${esc(v.salida)}</span><div><b>Salida del CIFP</b></div></li>${L.join('')}<li><span class="vh">${deMin(t)}</span><div><b>Vuelta al CIFP</b><small>${fmtKm(vu.km)} · ${fmtMin(vu.min||0)}</small></div></li></ol>
+    <div class="row"><a class="btnl" href="${gm}" target="_blank" rel="noopener">Abrir en Google Maps</a><button class="sec" data-vhecho="${i}">Visitas hechas: anotarlas</button><button class="sec" data-vcopy="${i}">Copiar</button></div></div>`}
+async function matriz(pts){const q=pts.map(g=>g.lng.toFixed(5)+','+g.lat.toFixed(5)).join(';');
+  const r=await(await fetch(`https://router.project-osrm.org/table/v1/driving/${q}?annotations=duration,distance`)).json();if(r.code!=='Ok')throw new Error('OSRM');
+  return{T:r.durations.map(f=>f.map(x=>x/60)),D:r.distances.map(f=>f.map(x=>x/1000))}}
+// Rutas: "ahorros" de Clarke-Wright con límite de jornada + vaciar días + mejor orden (exacto ≤7, 2-opt)
+function planificar(M,n,svc,max){const T=M.T,ct=r=>{let t=T[0][r[0]];for(let k=1;k<r.length;k++)t+=T[r[k-1]][r[k]];return t+T[r[r.length-1]][0]+svc*r.length};
+  const mejor=r=>{if(r.length<2)return r;if(r.length<=7){let b=r,bc=ct(r);const perm=(a,l)=>{if(l===a.length){const c=ct(a);if(c<bc){bc=c;b=[...a]}return}for(let i=l;i<a.length;i++){[a[l],a[i]]=[a[i],a[l]];perm(a,l+1);[a[l],a[i]]=[a[i],a[l]]}};perm([...r],0);return b}
+    let b=[...r],ok=true;while(ok){ok=false;for(let i=0;i<b.length-1;i++)for(let j=i+1;j<b.length;j++){const c=[...b.slice(0,i),...b.slice(i,j+1).reverse(),...b.slice(j+1)];if(ct(c)<ct(b)-.01){b=c;ok=true}}}return b};
+  let R=Array.from({length:n},(_,i)=>[i+1]);const sv=[];
+  for(let i=1;i<=n;i++)for(let j=1;j<=n;j++)if(i!==j)sv.push([T[i][0]+T[0][j]-T[i][j],i,j]);sv.sort((a,b)=>b[0]-a[0]);
+  for(const[s,i,j]of sv){if(s<=0)break;const a=R.find(r=>r[r.length-1]===i),b=R.find(r=>r[0]===j);if(!a||!b||a===b)continue;const m=[...a,...b];if(ct(m)>max)continue;R=R.filter(r=>r!==a&&r!==b);R.push(m)}
+  R=R.map(mejor);
+  let cambio=true;while(cambio&&R.length>1){cambio=false;R.sort((a,b)=>a.length-b.length||ct(a)-ct(b));
+    for(let k=0;k<R.length&&!cambio;k++){const src=R[k],otras=R.filter((_,x)=>x!==k).map(r=>[...r]);let ok=true;
+      for(const p of src){let best=null;for(const r of otras)for(let pos=0;pos<=r.length;pos++){const c=[...r.slice(0,pos),p,...r.slice(pos)];const d=ct(c);if(d<=max&&(!best||d-ct(r)<best[0]))best=[d-ct(r),r,pos]}
+        if(!best){ok=false;break}best[1].splice(best[2],0,p)}
+      if(ok){R=otras.map(mejor);cambio=true}}}
+  return R.sort((a,b)=>ct(b)-ct(a))}
+function legsDe(ids,M,idx){const P=[0,...ids.map(e=>idx[e]),0];return P.slice(1).map((p,k)=>({min:M.T[P[k]][p],km:M.D[P[k]][p]}))}
+async function calcVisitas(reordenar){const v=V();const ids=v.sel.filter(id=>S.emp[id]?.geo);if(!ids.length){toast('No hay empresas ubicadas marcadas');return}
+  vCalc=true;renderVisitas();
+  try{const M=await matriz([CENTRO,...ids.map(id=>S.emp[id].geo)]);vMat={M,ids};const idx=Object.fromEntries(ids.map((id,i)=>[id,i+1]));
+    const max=toMin(v.fin)-toMin(v.salida),svc=+v.svc||0;
+    let dias;if(reordenar&&v.plan){const T=M.T,ct=r=>{let t=T[0][r[0]];for(let k=1;k<r.length;k++)t+=T[r[k-1]][r[k]];return t+T[r[r.length-1]][0]};
+        dias=v.plan.map(d=>d.paradas.filter(e=>idx[e])).filter(d=>d.length).map(d=>{if(d.length>7)return d;let b=d,bc=Infinity;const perm=(a,l)=>{if(l===a.length){const c=ct(a.map(e=>idx[e]));if(c<bc){bc=c;b=[...a]}return}for(let i=l;i<a.length;i++){[a[l],a[i]]=[a[i],a[l]];perm(a,l+1);[a[l],a[i]]=[a[i],a[l]]}};perm([...d],0);return b})}
+    else dias=planificar(M,ids.length,svc,max).map(r=>r.map(k=>ids[k-1]));
+    v.plan=dias.map(p=>({paradas:p,legs:legsDe(p,M,idx)}));saveCfg('ajustes',S.aj)}
+  catch{toast('No se pudo calcular (servicio de rutas no disponible). Prueba en un rato.')}
+  vCalc=false;renderVisitas();dibujarVisitas()}
+async function dibujarVisitas(){if(!vmap||!vcapa)return;vcapa.clearLayers();const v=V();const B=[[CENTRO.lat,CENTRO.lng]];
+  L.marker([CENTRO.lat,CENTRO.lng],{icon:L.divIcon({className:'',html:'<div class="mk-al" style="background:#2b2f38">C</div>',iconSize:[34,34],iconAnchor:[17,17]})}).bindPopup('<b>CIFP Virgen de Las Nieves</b>').addTo(vcapa);
+  const enPlan=new Set();(v.plan||[]).forEach((d,i)=>{const c=DIA_COL[i%DIA_COL.length];const pts=d.paradas.map(e=>S.emp[e]?.geo).filter(Boolean);
+    d.paradas.forEach((e,k)=>{const g=S.emp[e]?.geo;if(!g)return;enPlan.add(e);B.push([g.lat,g.lng]);L.marker([g.lat,g.lng],{icon:L.divIcon({className:'',html:`<div class="mk-p" style="background:${c}">${k+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]})}).bindPopup(`<b>Día ${i+1} · ${k+1}</b><br>${esc(S.emp[e].nombre)}`).addTo(vcapa)});
+    const line=L.polyline([[CENTRO.lat,CENTRO.lng],...pts.map(g=>[g.lat,g.lng]),[CENTRO.lat,CENTRO.lng]],{color:c,weight:3,opacity:.5,dashArray:'4 6'}).addTo(vcapa);
+    rutaReal([CENTRO,...pts,CENTRO]).then(gj=>{if(gj&&vcapa.hasLayer(line)){vcapa.removeLayer(line);L.geoJSON(gj,{style:{color:c,weight:4,opacity:.8}}).addTo(vcapa)}})});
+  for(const e of v.sel||[]){const g=S.emp[e]?.geo;if(!g||enPlan.has(e))continue;B.push([g.lat,g.lng]);L.circleMarker([g.lat,g.lng],{radius:6,color:'#6c7280',fillOpacity:.6}).bindPopup(esc(S.emp[e].nombre)).addTo(vcapa)}
+  if(B.length>1)vmap.fitBounds(B,{padding:[30,30],maxZoom:13})}
+const rutaCache={};async function rutaReal(pts){const q=pts.map(g=>g.lng.toFixed(5)+','+g.lat.toFixed(5)).join(';');if(rutaCache[q])return rutaCache[q];
+  try{const r=await(await fetch(`https://router.project-osrm.org/route/v1/driving/${q}?overview=full&geometries=geojson`)).json();if(r.code==='Ok')return rutaCache[q]=r.routes[0].geometry}catch{}return null}
+document.addEventListener('change',ev=>{const t=ev.target;const v=S.aj.visitas;if(!t.closest('#visBox')||!v)return;
+  if(t.dataset.vsel){const s=new Set(v.sel);t.checked?s.add(t.dataset.vsel):s.delete(t.dataset.vsel);v.sel=[...s];saveCfg('ajustes',S.aj);dibujarVisitas();return}
+  if(t.id==='vAdd'&&t.value){v.sel=[...v.sel,t.value];saveCfg('ajustes',S.aj);renderVisitas();dibujarVisitas();return}
+  if(t.dataset.vk){v[t.dataset.vk]=t.dataset.vk==='svc'?+t.value:t.value;saveCfg('ajustes',S.aj);return}
+  if(t.dataset.vfecha!=null){v.fechas[t.dataset.vfecha]=t.value;saveCfg('ajustes',S.aj);return}
+  if(t.dataset.vmove&&t.value){const[i,k]=t.dataset.vmove.split(':').map(Number);const e=v.plan[i].paradas.splice(k,1)[0];
+    if(t.value==='x')v.sel=v.sel.filter(x=>x!==e);else{const j=+t.value;if(!v.plan[j])v.plan[j]={paradas:[]};v.plan[j].paradas.push(e)}
+    v.plan=v.plan.filter(d=>d.paradas.length);calcVisitas(true)}});
+document.addEventListener('click',ev=>{const t=ev.target.closest('#vCalc,[data-vhecho],[data-vcopy]');if(!t||!t.closest('#visBox'))return;const v=V();
+  if(t.id==='vCalc'){if(!vCalc)calcVisitas(false);return}
+  const i=+(t.dataset.vhecho??t.dataset.vcopy),d=v.plan?.[i];if(!d)return;const EM=visEmpresas();
+  if(t.dataset.vhecho!=null){const f=v.fechas[i]||hoyISO();let n=0;for(const e of d.paradas)for(const aid of EM.get(e)||[]){const s=segDe(S.alu[aid]);if(!s.contactos.some(c=>c.fecha===f&&c.tipo==='Visita')){s.contactos.push({fecha:f,tipo:'Visita',con:'Tutor de empresa',notas:'Visita a '+S.emp[e].nombre});save('alumnos',aid);n++}}
+    toast(n?`Visita anotada en ${n} alumno(s) con fecha ${fmtD(f)}`:'Ya estaban anotadas');renderVisitas();return}
+  let tt=toMin(v.salida);const txt=[`Día ${i+1}${v.fechas[i]?' ('+fmtD(v.fechas[i])+')':''} · salida ${v.salida} del CIFP`,...d.paradas.map((e,k)=>{tt+=d.legs[k]?.min||0;const r=`${deMin(tt)} ${S.emp[e]?.nombre} · ${fmtKm(d.legs[k]?.km)}`;tt+=+v.svc||0;return r}),`Vuelta: ${fmtKm(d.legs[d.paradas.length]?.km)}`].join('\n');
+  navigator.clipboard?.writeText(txt).then(()=>toast('Ruta copiada'),()=>toast('No se pudo copiar'))});
+addEventListener('hashchange',()=>{if(location.hash==='#visitas')abrirVisitas()});
 
 boot();
 
