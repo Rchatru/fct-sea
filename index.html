@@ -189,6 +189,85 @@ h2.sec-h,h2{font-size:18px}.sec-h{margin-top:22px}.mi .sw{transform:scale(.75)}
 .gdban{font-size:12.5px;padding:8px 12px;border-radius:6px;margin-bottom:10px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--line)}.gdban.ok{color:var(--oki)}.gdban.bad{background:var(--bab);color:var(--bai);box-shadow:none}
 .sd{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:3px;background:light-dark(#d6d6d6,#555);vertical-align:middle}.sd.ok{background:#0f7b0f}.sd.wa{background:#e3a21a}.sd.bad{background:#c42b1c}
 .geo{font-size:12px;color:var(--mut);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ===== Tema "pro" (nov-2026): fondo neutro, Public Sans, tarjetas homogéneas ===== */
+@font-face{font-family:"Public Sans";font-weight:400;font-display:swap;src:url(vendor/fonts/public-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Public Sans";font-weight:500;font-display:swap;src:url(vendor/fonts/public-sans-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Public Sans";font-weight:600;font-display:swap;src:url(vendor/fonts/public-sans-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Public Sans";font-weight:700;font-display:swap;src:url(vendor/fonts/public-sans-latin-700-normal.woff2) format("woff2")}
+:root{--bg:light-dark(#f5f6f8,#16181d);--card:light-dark(#ffffff,#1f2229);--card2:light-dark(#f8f9fb,#262a32);--ink:light-dark(#2b2f38,#e6e8ec);--mut:light-dark(#6c7280,#9ba1ad);
+--line:light-dark(#e6e8ec,#2f343d);--ctl:light-dark(#ffffff,#1b1e24);--ctlb:light-dark(#d5d9e0,#3a3f4a);--hov:light-dark(#f3f4f7,#272b33);--sel:light-dark(#eef2fd,#252d42);
+--ac:light-dark(#3b5bdb,#7b93f0);--acs:light-dark(#eef2fd,#252d42);--acin:#fff;
+--sh:0 1px 2px light-dark(rgba(16,24,40,.04),rgba(0,0,0,.3)),0 0 0 1px var(--line);--shl:0 4px 18px light-dark(rgba(16,24,40,.07),rgba(0,0,0,.35));--r:10px;--tint:var(--bg);
+--f:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+body,#auth{background:var(--bg)}
+body{font:14px/1.5 var(--f);letter-spacing:-.003em;-webkit-font-smoothing:antialiased}
+.ptitle,.kpi b,.brand b,h2{font-family:var(--f);letter-spacing:-.015em}
+input,select,textarea,button{font-family:var(--f)}
+/* Menú lateral: panel blanco a toda altura */
+aside{background:var(--card);border-right:1px solid var(--line);padding:20px 14px;gap:6px}
+.brand{padding:2px 8px 18px;gap:12px}
+.brand .logo{width:38px;height:38px;border-radius:10px;background:var(--ac);box-shadow:none}
+.brand .logo svg{width:21px;height:21px}
+.brand b{font-size:16px;font-weight:700}
+.chip{background:var(--acs);color:var(--ac);font-weight:600;font-size:11.5px}
+nav{gap:2px}
+nav a{min-height:40px;border-radius:8px;color:light-dark(#4b5160,#c3c8d2);font-weight:500;gap:12px}
+nav a:hover{background:var(--hov)}
+nav a.on{background:var(--acs);color:var(--ac);font-weight:600}
+nav a.on::before{display:none}
+nav em{background:light-dark(#eceef2,#2c313a)}
+.foot{border-top-color:var(--line)}
+/* Cabecera y contenido */
+main{padding:28px clamp(18px,3vw,36px) 40px}
+.phead{margin-bottom:20px}.ptitle{font-size:24px;font-weight:700;line-height:1.2}.phead p{font-size:13.5px}
+.kpis{gap:12px;margin-bottom:24px}
+.kpi{padding:16px 18px;box-shadow:var(--sh);border-radius:var(--r)}
+.kpi b{font-size:22px;font-weight:700}.kpi span{font-size:12.5px}
+.kpi .ic{width:42px;height:42px;border-radius:8px}
+.c-b{background:var(--acs);color:var(--ac)}
+.card,.tbl,.list,.mi,.scard,#map{border-radius:var(--r);box-shadow:var(--sh)}
+.card{padding:22px 24px}
+h2{font-size:17px;font-weight:600}h3{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+.sec-h{margin-top:30px}
+/* Tablas */
+th{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--mut);background:var(--card2);border-bottom:1px solid var(--line);padding:11px 14px}
+td{padding:11px 14px;border-bottom-color:var(--line)}
+tr.click:hover td{background:var(--hov)}
+/* Controles */
+input,select,textarea{border:1px solid var(--ctlb);border-radius:6px;padding:6px 12px;transition:border-color .15s,box-shadow .15s}
+input:hover,select:hover,textarea:hover{background:var(--ctl);border-color:light-dark(#b9bfca,#4b5260)}
+input:focus,select:focus,textarea:focus{border:1px solid var(--ac);padding-bottom:6px;box-shadow:0 0 0 3px light-dark(rgba(59,91,219,.15),rgba(123,147,240,.25))}
+button{border-radius:6px;font-weight:500;font-size:13.5px;box-shadow:0 1px 2px light-dark(rgba(59,91,219,.25),rgba(0,0,0,.3));transition:background .15s,filter .15s}
+button.sec,button.danger,button.ghost{box-shadow:none}
+button.sec{border-color:var(--ctlb)}button.sec:hover{background:var(--hov)}
+.linkb,.seg button,.scard,#closeOv.sec{box-shadow:none}
+.tag{font-weight:500;padding:2px 9px;box-shadow:none;background:light-dark(#eef0f3,#2c313a)}
+.info,.gdban,.contact,.hito,.pitem{border-radius:8px}
+.li{border-radius:8px}.li.sel{background:var(--acs)}.li.sel::before{display:none}.li.sel b{color:var(--ac)}
+.seg{border-radius:8px}.seg button.on{box-shadow:0 1px 2px rgba(16,24,40,.12)}
+#ov{background:light-dark(rgba(20,24,33,.45),rgba(0,0,0,.6))}
+#ov .card{border-radius:12px;box-shadow:0 24px 48px rgba(16,24,40,.22),0 0 0 1px var(--line)}
+.sw input:checked+i{background:var(--ac);border-color:var(--ac)}
+.mk-al{background:#3b5bdb}
+/* Móvil */
+@media(max-width:760px){
+ aside{border-right:0;border-bottom:1px solid var(--line);padding:10px 14px;position:sticky;top:0;z-index:14;gap:0}
+ .brand{padding:0;gap:10px}.brand .logo{width:32px;height:32px;border-radius:8px}.brand .logo svg{width:18px;height:18px}.brand b{font-size:15px}
+ .hact .icb{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+ nav{background:var(--card);box-shadow:0 -1px 0 var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+ nav a{background:transparent!important;color:var(--mut);font-weight:500;gap:4px;min-height:52px;border-radius:10px}
+ nav a svg{width:20px;height:20px;padding:4px 14px;border-radius:999px;box-sizing:content-box}
+ nav a.on{color:var(--ac);font-weight:600}nav a.on svg{background:var(--acs)}
+ main{padding:16px 14px 96px}
+ .ptitle{font-size:21px;margin-top:0}.phead{margin-bottom:14px}
+ .kpis{margin:0 -14px 16px;padding:0 14px;gap:8px}.kpis .kpi{padding:9px 12px;box-shadow:var(--sh)}.kpis .kpi b{font-size:17px}
+ .kpis .kpi .ic{width:30px;height:30px;border-radius:7px}
+ .card{padding:16px}h2,h2.sec-h{font-size:16px}
+ .mi{padding:10px 12px}.mi-t b{font-size:13.5px}
+ #ov .card{border-radius:18px 18px 0 0}
+ .segsum{gap:8px}.segsum .kpi{padding:10px 12px;gap:10px}.segsum .kpi .ic{width:32px;height:32px}.segsum .kpi b{font-size:18px}
+}
 </style><script src="stack.js"></script></head><body>
 <div class="app"><aside>
 <div class="brand"><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="m12.6 10.5-2 3h2.8l-2 3"/></svg></div>
