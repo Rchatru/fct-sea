@@ -648,104 +648,138 @@ async function kmCentro(id){const e=S.emp[id];if(!e?.geo||(e.kmCentro&&e.kmCentr
   try{const r=await(await fetch(`https://router.project-osrm.org/route/v1/driving/${CENTRO.lng},${CENTRO.lat};${e.geo.lng},${e.geo.lat}?overview=false`)).json();
     if(r.code==='Ok'){const cur=S.emp[id];if(!cur)return;cur.kmCentro={km:r.routes[0].distance/1000,min:r.routes[0].duration/60,g:geoK(cur.geo)};save('empresas',id);const k=$('#kmC');if(k&&selE===id)k.innerHTML=kmTxt(cur)}}catch{}}
 
-// ---------- Visitas: agrupar empresas en el menor número de días ----------
-const VIS_DEF={sel:null,salida:'08:30',fin:'13:30',svc:30,plan:null,fechas:{}};
-const V=()=>{const v=S.aj.visitas??={};for(const[k,x]of Object.entries(VIS_DEF))if(!(k in v))v[k]=x&&typeof x==='object'?{...x}:x;return v};
+// ---------- Visitas: rondas de visitas, días y orden (automático o a mano) ----------
+// Algoritmo: tiempos reales por carretera (OSRM). 1) Clarke-Wright ("ahorros") con límite de jornada; 2) vaciar días metiendo
+// sus paradas donde menos tiempo añadan; 3) orden exacto de cada día (≤8 paradas) o 2-opt. Objetivo: menos días y luego menos minutos.
 const DIA_COL=['#3b5bdb','#e8590c','#2b8a3e','#ae3ec9','#c92a2a','#0c8599','#5c940d','#d6336c'];
-let vmap=null,vcapa=null,vMat=null,vCalc=false;
+let vmap=null,vcapa=null,vCalc=false,vSeguro=false,vDrag=null;
 const toMin=t=>{const[h,m]=(t||'0:0').split(':').map(Number);return h*60+(m||0)};
 const deMin=m=>String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(Math.round(m%60)).padStart(2,'0');
+function V(){const v=S.aj.visitas??={};v.salida??='08:30';v.fin??='13:30';v.svc??=30;
+  if(!v.rondas){v.rondas={r1:{nombre:'Ronda 1',sel:v.sel||null,dias:(v.plan||[]).map((d,i)=>({paradas:d.paradas,horas:{},fecha:v.fechas?.[i]||''}))}};v.actual='r1';delete v.plan;delete v.sel;delete v.fechas}
+  if(!v.rondas[v.actual])v.actual=Object.keys(v.rondas)[0];return v}
+const RD=()=>{const v=V();return v.rondas[v.actual]};
+const guardaV=()=>saveCfg('ajustes',S.aj);
 function visEmpresas(){const m=new Map();for(const[aid,a]of sortedAlu()){if(a.estado!=='realiza')continue;const e=res[aid]?.emp;if(!e||!S.emp[e])continue;if(!m.has(e))m.set(e,[]);m.get(e).push(aid)}return m}
-function ultimaVisita(eid,als){let u='';for(const aid of als||[]){for(const c of segDe(S.alu[aid]).contactos)if(c.tipo==='Visita'&&c.fecha>u)u=c.fecha}return u}
-function abrirVisitas(){renderVisitas();setTimeout(()=>{if(!window.L||!$('#vmap'))return;if(!vmap){vmap=L.map('vmap',{zoomSnap:.5}).setView([28.67,-17.86],10.5);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(vmap);vcapa=L.layerGroup().addTo(vmap)}vmap.invalidateSize();dibujarVisitas()},50)}
-function renderVisitas(){const box=$('#visBox');if(!box)return;const v=V(),EM=visEmpresas();if(v.sel==null)v.sel=[...EM.keys()];
-  const sel=new Set(v.sel),ids=[...new Set([...EM.keys(),...v.sel])].filter(id=>S.emp[id]);
-  const sinGeo=ids.filter(id=>sel.has(id)&&!S.emp[id].geo);
-  const fila=id=>{const e=S.emp[id],als=EM.get(id)||[],u=ultimaVisita(id,als),tur=[...new Set(als.map(a=>TURNO_A[S.alu[a].turno]).filter(x=>x&&!/indiferente|cualquiera/i.test(x)))];
-    return`<label class="vrow"><input type="checkbox" data-vsel="${id}"${sel.has(id)?' checked':''}><span><b>${esc(e.nombre)}</b><small>${esc(e.municipio||'')}${als.length?' · '+als.length+' alumno(s)':''}${tur.length?' · '+esc(tur.join('/')):''}${u?' · visitada '+fmtD(u):''}${e.geo?'':' · <span style="color:var(--bai)">sin ubicar</span>'}</small></span></label>`};
-  const plan=v.plan&&v.plan.filter(d=>d.paradas.length);
-  box.innerHTML=`<div class="visgrid"><div>
-    <div class="card"><h2>1. Qué empresas visitar</h2><p class="note">Por defecto, las que tienen alumnos asignados. Marca o desmarca.</p>
-      <div class="vlist">${ids.map(fila).join('')||'<p class="note">Aún no hay alumnos asignados a empresas.</p>'}</div>
-      <div class="row" style="margin-top:10px"><select id="vAdd" style="flex:1;margin:0"><option value="">+ Añadir otra empresa…</option>${Object.entries(S.emp).filter(([id,e])=>!ids.includes(id)&&e.activa!==false).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre)).map(([id,e])=>`<option value="${id}">${esc(e.nombre)}</option>`).join('')}</select></div>
-      ${sinGeo.length?`<p class="note bad">${sinGeo.length} empresa(s) sin ubicar no entran en la ruta. Ubícalas desde la pestaña Mapa.</p>`:''}</div>
-    <div class="card" style="margin-top:12px"><h2>2. Tu jornada</h2><div class="grid">
-      <label>Salida del CIFP<input type="time" data-vk="salida" value="${esc(v.salida)}"></label><label>Hora límite de vuelta<input type="time" data-vk="fin" value="${esc(v.fin)}"></label>
-      <label>Minutos en cada empresa<input type="number" min="5" step="5" data-vk="svc" value="${esc(v.svc)}"></label></div>
-      <button id="vCalc" style="margin-top:12px;width:100%">${vCalc?'Calculando…':'Calcular rutas'}</button></div>
-    <p class="note" style="margin-top:10px">Comisión de servicio en GDCAN: registra cada visita <b>el mismo día</b> (no admite fechas pasadas). Los km de cada tramo de abajo son los que te pedirá.</p>
-  </div><div><div id="vmap"></div>
-    <div id="vPlan">${plan?.length?plan.map((d,i)=>diaHTML(d,i,plan.length)).join(''):'<div class="card empty">Marca las empresas y pulsa <b>Calcular rutas</b>.</div>'}</div></div></div>`}
-function diaHTML(d,i,n){const v=V(),c=DIA_COL[i%DIA_COL.length];let t=toMin(v.salida);const L=[];let km=0;
-  const legs=d.legs||[];
-  d.paradas.forEach((eid,k)=>{const lg=legs[k]||{};t+=lg.min||0;km+=lg.km||0;const e=S.emp[eid],als=visEmpresas().get(eid)||[];
-    const tut=(e?.contactos||[]).find(x=>/tutor/i.test(x.rol))||(e?.contactos||[])[0];
-    L.push(`<li><span class="vh">${deMin(t)}</span><div><b>${esc(e?.nombre||'?')}</b><small>${fmtKm(lg.km)} · ${fmtMin(lg.min||0)} desde ${k?'la anterior':'el CIFP'}${als.length?' · '+als.map(a=>esc(S.alu[a].nombre.split(',').reverse().join(' ').trim())).join(', '):''}${tut?.telefono?` · <a href="tel:${esc(tut.telefono.replace(/\s/g,''))}">${esc(tut.nombre||'tutor')} ${esc(tut.telefono)}</a>`:''}</small>
-      <select data-vmove="${i}:${k}" class="vmv"><option value="">Mover…</option>${Array.from({length:n+1},(_,j)=>j===i?'':`<option value="${j}">${j<n?'al día '+(j+1):'a un día nuevo'}</option>`).join('')}<option value="x">Quitar de la ruta</option></select></div></li>`);
-    t+=+v.svc||0});
-  const vu=legs[d.paradas.length]||{};t+=vu.min||0;km+=vu.km||0;const tarde=t>toMin(v.fin);
-  const pts=[CENTRO,...d.paradas.map(e=>S.emp[e]?.geo).filter(Boolean),CENTRO];
-  const gm='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+pts[0].lat+','+pts[0].lng+'&destination='+CENTRO.lat+','+CENTRO.lng+(pts.length>2?'&waypoints='+encodeURIComponent(pts.slice(1,-1).map(g=>g.lat+','+g.lng).join('|')):'');
-  const f=v.fechas[i]||'';
-  return`<div class="card vdia" style="border-top:4px solid ${c}"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Día ${i+1}</h2>
-    <input type="date" data-vfecha="${i}" value="${esc(f)}" style="width:auto;margin:0"></div>
-    <p class="note">${d.paradas.length} empresa(s) · ${fmtKm(km)} en total · vuelta a las <b${tarde?' style="color:var(--bai)"':''}>${deMin(t)}</b>${tarde?' (pasa de la hora límite)':''}</p>
-    <ol class="vtl"><li><span class="vh">${esc(v.salida)}</span><div><b>Salida del CIFP</b></div></li>${L.join('')}<li><span class="vh">${deMin(t)}</span><div><b>Vuelta al CIFP</b><small>${fmtKm(vu.km)} · ${fmtMin(vu.min||0)}</small></div></li></ol>
-    <div class="row"><a class="btnl" href="${gm}" target="_blank" rel="noopener">Abrir en Google Maps</a><button class="sec" data-vhecho="${i}">Visitas hechas: anotarlas</button><button class="sec" data-vcopy="${i}">Copiar</button></div></div>`}
-async function matriz(pts){const q=pts.map(g=>g.lng.toFixed(5)+','+g.lat.toFixed(5)).join(';');
-  const r=await(await fetch(`https://router.project-osrm.org/table/v1/driving/${q}?annotations=duration,distance`)).json();if(r.code!=='Ok')throw new Error('OSRM');
-  return{T:r.durations.map(f=>f.map(x=>x/60)),D:r.distances.map(f=>f.map(x=>x/1000))}}
-// Rutas: "ahorros" de Clarke-Wright con límite de jornada + vaciar días + mejor orden (exacto ≤7, 2-opt)
+function ultimaVisita(als){let u='';for(const aid of als||[])for(const c of segDe(S.alu[aid]).contactos)if(c.tipo==='Visita'&&c.fecha>u)u=c.fecha;return u}
+function tramo(r,a,b){const M=r.M;if(!M)return null;const i=a==null?0:M.ids.indexOf(a)+1,j=b==null?0:M.ids.indexOf(b)+1;if(!i&&a!=null||!j&&b!=null)return null;return{min:M.T[i][j],km:M.D[i][j]}}
+// simula un día: llegada a cada parada, esperas y retrasos respecto a la hora acordada
+function simDia(r,d){const v=V(),svc=+v.svc||0;let t=toMin(v.salida),km=0,prev=null,falta=false,tarde=0;const P=[];
+  for(const e of d.paradas){const lg=tramo(r,prev,e);if(!lg)falta=true;t+=lg?.min||0;km+=lg?.km||0;let espera=0,retraso=0;const h=d.horas?.[e];
+    if(h){const hm=toMin(h);if(t<hm){espera=hm-t;t=hm}else if(t>hm+1){retraso=t-hm;tarde+=retraso}}P.push({e,lg,llegada:t,espera,retraso});t+=svc;prev=e}
+  const vu=d.paradas.length?tramo(r,prev,null):{min:0,km:0};if(!vu)falta=true;t+=vu?.min||0;km+=vu?.km||0;return{P,vuelta:t,vu,km,falta,tarde}}
+function costeOrden(r,d,orden){const s=simDia(r,{...d,paradas:orden});let viaje=0;for(const p of s.P)viaje+=p.lg?.min||0;return viaje+(s.vu?.min||0)+s.tarde*1000}
+function optimizarDia(r,d){const P=d.paradas;if(P.length<2)return P;const c=o=>costeOrden(r,d,o);
+  if(P.length<=8){let b=P,bc=c(P);const perm=(a,l)=>{if(l===a.length){const x=c(a);if(x<bc){bc=x;b=[...a]}return}for(let i=l;i<a.length;i++){[a[l],a[i]]=[a[i],a[l]];perm(a,l+1);[a[l],a[i]]=[a[i],a[l]]}};perm([...P],0);return b}
+  let b=[...P],ok=true;while(ok){ok=false;for(let i=0;i<b.length-1;i++)for(let j=i+1;j<b.length;j++){const x=[...b.slice(0,i),...b.slice(i,j+1).reverse(),...b.slice(j+1)];if(c(x)<c(b)-.01){b=x;ok=true}}}return b}
 function planificar(M,n,svc,max){const T=M.T,ct=r=>{let t=T[0][r[0]];for(let k=1;k<r.length;k++)t+=T[r[k-1]][r[k]];return t+T[r[r.length-1]][0]+svc*r.length};
-  const mejor=r=>{if(r.length<2)return r;if(r.length<=7){let b=r,bc=ct(r);const perm=(a,l)=>{if(l===a.length){const c=ct(a);if(c<bc){bc=c;b=[...a]}return}for(let i=l;i<a.length;i++){[a[l],a[i]]=[a[i],a[l]];perm(a,l+1);[a[l],a[i]]=[a[i],a[l]]}};perm([...r],0);return b}
+  const mejor=r=>{if(r.length<2)return r;if(r.length<=8){let b=r,bc=ct(r);const perm=(a,l)=>{if(l===a.length){const c=ct(a);if(c<bc){bc=c;b=[...a]}return}for(let i=l;i<a.length;i++){[a[l],a[i]]=[a[i],a[l]];perm(a,l+1);[a[l],a[i]]=[a[i],a[l]]}};perm([...r],0);return b}
     let b=[...r],ok=true;while(ok){ok=false;for(let i=0;i<b.length-1;i++)for(let j=i+1;j<b.length;j++){const c=[...b.slice(0,i),...b.slice(i,j+1).reverse(),...b.slice(j+1)];if(ct(c)<ct(b)-.01){b=c;ok=true}}}return b};
   let R=Array.from({length:n},(_,i)=>[i+1]);const sv=[];
   for(let i=1;i<=n;i++)for(let j=1;j<=n;j++)if(i!==j)sv.push([T[i][0]+T[0][j]-T[i][j],i,j]);sv.sort((a,b)=>b[0]-a[0]);
   for(const[s,i,j]of sv){if(s<=0)break;const a=R.find(r=>r[r.length-1]===i),b=R.find(r=>r[0]===j);if(!a||!b||a===b)continue;const m=[...a,...b];if(ct(m)>max)continue;R=R.filter(r=>r!==a&&r!==b);R.push(m)}
-  R=R.map(mejor);
-  let cambio=true;while(cambio&&R.length>1){cambio=false;R.sort((a,b)=>a.length-b.length||ct(a)-ct(b));
+  R=R.map(mejor);let cambio=true;
+  while(cambio&&R.length>1){cambio=false;R.sort((a,b)=>a.length-b.length||ct(a)-ct(b));
     for(let k=0;k<R.length&&!cambio;k++){const src=R[k],otras=R.filter((_,x)=>x!==k).map(r=>[...r]);let ok=true;
       for(const p of src){let best=null;for(const r of otras)for(let pos=0;pos<=r.length;pos++){const c=[...r.slice(0,pos),p,...r.slice(pos)];const d=ct(c);if(d<=max&&(!best||d-ct(r)<best[0]))best=[d-ct(r),r,pos]}
         if(!best){ok=false;break}best[1].splice(best[2],0,p)}
       if(ok){R=otras.map(mejor);cambio=true}}}
   return R.sort((a,b)=>ct(b)-ct(a))}
-function legsDe(ids,M,idx){const P=[0,...ids.map(e=>idx[e]),0];return P.slice(1).map((p,k)=>({min:M.T[P[k]][p],km:M.D[P[k]][p]}))}
-async function calcVisitas(reordenar){const v=V();const ids=v.sel.filter(id=>S.emp[id]?.geo);if(!ids.length){toast('No hay empresas ubicadas marcadas');return}
+async function asegurarMatriz(forzar){const r=RD();const ids=[...new Set([...(r.sel||[]),...r.dias.flatMap(d=>d.paradas)])].filter(id=>S.emp[id]?.geo);
+  const key=ids.map(id=>id+geoK(S.emp[id].geo)).sort().join();if(!forzar&&r.M&&r.M.key===key)return true;if(!ids.length)return false;
+  const q=[CENTRO,...ids.map(id=>S.emp[id].geo)].map(g=>g.lng.toFixed(5)+','+g.lat.toFixed(5)).join(';');
+  try{const j=await(await fetch(`https://router.project-osrm.org/table/v1/driving/${q}?annotations=duration,distance`)).json();if(j.code!=='Ok')throw 0;
+    const rd=x=>Math.round(x*10)/10;r.M={key,ids,T:j.durations.map(f=>f.map(x=>rd(x/60))),D:j.distances.map(f=>f.map(x=>rd(x/1000)))};guardaV();return true}
+  catch{toast('No se pudo consultar el servicio de rutas. Prueba en un rato.');return false}}
+async function calcVisitas(){const v=V(),r=RD();const ids=(r.sel||[]).filter(id=>S.emp[id]?.geo);if(!ids.length){toast('No hay empresas ubicadas marcadas');return}
   vCalc=true;renderVisitas();
-  try{const M=await matriz([CENTRO,...ids.map(id=>S.emp[id].geo)]);vMat={M,ids};const idx=Object.fromEntries(ids.map((id,i)=>[id,i+1]));
-    const max=toMin(v.fin)-toMin(v.salida),svc=+v.svc||0;
-    let dias;if(reordenar&&v.plan){const T=M.T,ct=r=>{let t=T[0][r[0]];for(let k=1;k<r.length;k++)t+=T[r[k-1]][r[k]];return t+T[r[r.length-1]][0]};
-        dias=v.plan.map(d=>d.paradas.filter(e=>idx[e])).filter(d=>d.length).map(d=>{if(d.length>7)return d;let b=d,bc=Infinity;const perm=(a,l)=>{if(l===a.length){const c=ct(a.map(e=>idx[e]));if(c<bc){bc=c;b=[...a]}return}for(let i=l;i<a.length;i++){[a[l],a[i]]=[a[i],a[l]];perm(a,l+1);[a[l],a[i]]=[a[i],a[l]]}};perm([...d],0);return b})}
-    else dias=planificar(M,ids.length,svc,max).map(r=>r.map(k=>ids[k-1]));
-    v.plan=dias.map(p=>({paradas:p,legs:legsDe(p,M,idx)}));saveCfg('ajustes',S.aj)}
-  catch{toast('No se pudo calcular (servicio de rutas no disponible). Prueba en un rato.')}
+  if(await asegurarMatriz()){const M=r.M,idx=ids.map(id=>M.ids.indexOf(id)+1),sub={T:[0,...idx].map(i=>[0,...idx].map(j=>M.T[i][j]))};
+    const dias=planificar(sub,ids.length,+v.svc||0,toMin(v.fin)-toMin(v.salida)).map(rr=>rr.map(k=>ids[k-1]));
+    r.dias=dias.map((p,i)=>({paradas:p,horas:{},fecha:r.dias[i]?.fecha||''}));guardaV()}
   vCalc=false;renderVisitas();dibujarVisitas()}
-async function dibujarVisitas(){if(!vmap||!vcapa)return;vcapa.clearLayers();const v=V();const B=[[CENTRO.lat,CENTRO.lng]];
+function abrirVisitas(){renderVisitas();setTimeout(async()=>{if(!window.L||!$('#vmap'))return;if(!vmap){vmap=L.map('vmap',{zoomSnap:.5}).setView([28.67,-17.86],10.5);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(vmap);vcapa=L.layerGroup().addTo(vmap)}vmap.invalidateSize();dibujarVisitas();
+  if(RD().dias.length&&await asegurarMatriz()){renderVisitas();dibujarVisitas()}},50)}
+function renderVisitas(){const box=$('#visBox');if(!box)return;const v=V(),r=RD(),EM=visEmpresas();if(r.sel==null)r.sel=[...EM.keys()];
+  const sel=new Set(r.sel),ids=[...new Set([...EM.keys(),...r.sel])].filter(id=>S.emp[id]);const enDia=new Set(r.dias.flatMap(d=>d.paradas));
+  const sinGeo=ids.filter(id=>sel.has(id)&&!S.emp[id].geo),sueltas=r.sel.filter(id=>S.emp[id]&&!enDia.has(id)&&S.emp[id].geo);
+  const fila=id=>{const e=S.emp[id],als=EM.get(id)||[],u=ultimaVisita(als),tur=[...new Set(als.map(a=>TURNO_A[S.alu[a].turno]).filter(x=>x&&x!=='Indiferente'))];
+    return`<label class="vrow"><input type="checkbox" data-vsel="${id}"${sel.has(id)?' checked':''}><span><b>${esc(e.nombre)}</b><small>${esc(e.municipio||'')}${als.length?' · '+als.length+' alumno(s)':''}${tur.length?' · turno de '+esc(tur.join('/').toLowerCase()):''}${u?' · visitada '+fmtD(u):''}${e.geo?'':' · <span style="color:var(--bai)">sin ubicar</span>'}</small></span></label>`};
+  const ops=Object.entries(v.rondas).map(([k,x])=>`<option value="${k}"${k===v.actual?' selected':''}>${esc(x.nombre)}</option>`).join('');
+  box.innerHTML=`<div class="card vronda"><div class="row"><select id="vRonda" style="flex:1 1 180px;margin:0">${ops}</select><input id="vNom" value="${esc(r.nombre)}" aria-label="Nombre de la ronda" style="flex:1 1 180px;margin:0">
+    <button class="sec" id="vNueva">+ Nueva ronda</button>${Object.keys(v.rondas).length>1?'<button class="danger" id="vBorra">Borrar ronda</button>':''}</div>
+    <p class="note" style="margin:6px 0 0">Cada ronda (por ejemplo, «Visita inicial», «Visita intermedia») tiene sus propias empresas, días, orden y horas.</p></div>
+  <div class="visgrid"><div>
+    <div class="card"><h2>1. Qué empresas visitar</h2><p class="note">Por defecto, las que tienen alumnos asignados.</p>
+      <div class="vlist">${ids.map(fila).join('')||'<p class="note">Aún no hay alumnos asignados a empresas.</p>'}</div>
+      <select id="vAdd" style="margin-top:10px"><option value="">+ Añadir otra empresa…</option>${Object.entries(S.emp).filter(([id,e])=>!ids.includes(id)&&e.activa!==false).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre)).map(([id,e])=>`<option value="${id}">${esc(e.nombre)}</option>`).join('')}</select>
+      ${sinGeo.length?`<p class="note bad">${sinGeo.length} empresa(s) sin ubicar no pueden entrar en la ruta. Ubícalas desde la pestaña Mapa.</p>`:''}</div>
+    <div class="card" style="margin-top:12px"><h2>2. Tu jornada</h2><div class="grid">
+      <label>Salida del CIFP<input type="time" data-vk="salida" value="${esc(v.salida)}"></label><label>Hora límite de vuelta<input type="time" data-vk="fin" value="${esc(v.fin)}"></label>
+      <label>Minutos en cada empresa<input type="number" min="5" step="5" data-vk="svc" value="${esc(v.svc)}"></label></div>
+      <button id="vCalc" style="margin-top:12px;width:100%">${vCalc?'Calculando…':vSeguro?'¿Rehacer todos los días? Pulsa otra vez':r.dias.length?'Proponer días y orden de nuevo':'Proponer días y orden'}</button>
+      <p class="note">Propone el reparto con menos días y menos tiempo de coche. Después puedes cambiarlo todo a mano.</p></div>
+    <p class="note" style="margin-top:10px">Comisión de servicio en GDCAN: registra cada visita <b>el mismo día</b> (no admite fechas pasadas). Los km de cada tramo son los que te pedirá.</p>
+  </div><div><div id="vmap"></div>
+    ${sueltas.length?`<div class="card vdia"><h2>Sin día</h2><p class="note">Marcadas pero sin día asignado.</p><ol class="vtl">${sueltas.map(e=>`<li><span class="vh">—</span><div><b>${esc(S.emp[e].nombre)}</b><div class="vctl">${moverSel(-1,e,r.dias.length)}</div></div></li>`).join('')}</ol></div>`:''}
+    <div id="vPlan">${r.dias.length?r.dias.map((d,i)=>diaHTML(r,d,i)).join(''):'<div class="card empty">Marca las empresas y pulsa <b>Proponer días y orden</b>, o crea los días a mano moviendo empresas.</div>'}</div></div></div>`}
+const moverSel=(i,e,n)=>`<select data-vmove="${i}:${e}" class="vmv"><option value="">${i<0?'Asignar a…':'Mover a…'}</option>${Array.from({length:n+1},(_,j)=>j===i?'':`<option value="${j}">${j<n?'Día '+(j+1):'Día nuevo'}</option>`).join('')}${i<0?'':'<option value="s">Sin día</option>'}<option value="x">Quitar de la ronda</option></select>`;
+function diaHTML(r,d,i){const v=V(),c=DIA_COL[i%DIA_COL.length],s=simDia(r,d),n=r.dias.length,EM=visEmpresas();const tarde=s.vuelta>toMin(v.fin);
+  const L2=s.P.map((p,k)=>{const e=S.emp[p.e],als=EM.get(p.e)||[];const tut=(e?.contactos||[]).find(x=>/tutor/i.test(x.rol))||(e?.contactos||[])[0];
+    return`<li draggable="true" data-vst="${i}:${k}"><span class="vh"><span class="vgrip" aria-hidden="true">⋮⋮</span>${deMin(p.llegada)}</span><div><b>${esc(e?.nombre||'?')}</b>
+      <small>${p.lg?fmtKm(p.lg.km)+' · '+fmtMin(p.lg.min)+' desde '+(k?'la anterior':'el CIFP'):'calculando tramo…'}${p.espera>0?` · <span style="color:var(--wai)">esperas ${fmtMin(p.espera)}</span>`:''}${p.retraso>0?` · <span style="color:var(--bai)">llegas ${fmtMin(p.retraso)} tarde</span>`:''}${als.length?' · '+als.map(a=>esc(S.alu[a].nombre.split(',').reverse().join(' ').trim())).join(', '):''}${tut?.telefono?` · <a href="tel:${esc(tut.telefono.replace(/\s/g,''))}">${esc(tut.nombre||'tutor')} ${esc(tut.telefono)}</a>`:''}</small>
+      <div class="vctl"><button class="ghost vup" data-vup="${i}:${k}" ${k?'':'disabled'} aria-label="Subir">↑</button><button class="ghost vup" data-vdn="${i}:${k}" ${k<s.P.length-1?'':'disabled'} aria-label="Bajar">↓</button>
+        <label class="vhora" title="Hora acordada con la empresa"><span>Hora acordada</span><input type="time" data-vhora="${i}:${p.e}" value="${esc(d.horas?.[p.e]||'')}"></label>${moverSel(i,p.e,n)}</div></div></li>`}).join('');
+  const pts=[CENTRO,...d.paradas.map(e=>S.emp[e]?.geo).filter(Boolean),CENTRO];
+  const gm='https://www.google.com/maps/dir/?api=1&travelmode=driving&origin='+CENTRO.lat+','+CENTRO.lng+'&destination='+CENTRO.lat+','+CENTRO.lng+(pts.length>2?'&waypoints='+encodeURIComponent(pts.slice(1,-1).map(g=>g.lat+','+g.lng).join('|')):'');
+  return`<div class="card vdia" style="border-top:4px solid ${c}" data-vdia="${i}"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Día ${i+1}</h2>
+    <input type="date" data-vfecha="${i}" value="${esc(d.fecha||'')}" style="width:auto;margin:0" aria-label="Fecha del día ${i+1}"></div>
+    <p class="note">${d.paradas.length} empresa(s) · ${fmtKm(s.km)} · vuelta a las <b${tarde?' style="color:var(--bai)"':''}>${deMin(s.vuelta)}</b>${tarde?' (pasa de la hora límite)':''}${s.tarde?' · <span style="color:var(--bai)">no llegas a alguna hora acordada</span>':''}</p>
+    <ol class="vtl" data-vdrop="${i}"><li class="vfix"><span class="vh">${esc(v.salida)}</span><div><b>Salida del CIFP</b></div></li>${L2||'<li class="vfix"><span class="vh"></span><div class="note">Arrastra o mueve empresas aquí.</div></li>'}<li class="vfix"><span class="vh">${deMin(s.vuelta)}</span><div><b>Vuelta al CIFP</b><small>${s.vu?fmtKm(s.vu.km)+' · '+fmtMin(s.vu.min):''}</small></div></li></ol>
+    <div class="row"><button class="sec" data-vopt="${i}" ${d.paradas.length>1?'':'disabled'}>Mejor orden</button><a class="btnl" href="${gm}" target="_blank" rel="noopener">Google Maps</a><button class="sec" data-vhecho="${i}">Visitas hechas</button><button class="sec" data-vcopy="${i}">Copiar</button></div></div>`}
+async function dibujarVisitas(){if(!vmap||!vcapa)return;vcapa.clearLayers();const r=RD();const B=[[CENTRO.lat,CENTRO.lng]];
   L.marker([CENTRO.lat,CENTRO.lng],{icon:L.divIcon({className:'',html:'<div class="mk-al" style="background:#2b2f38">C</div>',iconSize:[34,34],iconAnchor:[17,17]})}).bindPopup('<b>CIFP Virgen de Las Nieves</b>').addTo(vcapa);
-  const enPlan=new Set();(v.plan||[]).forEach((d,i)=>{const c=DIA_COL[i%DIA_COL.length];const pts=d.paradas.map(e=>S.emp[e]?.geo).filter(Boolean);
+  const enPlan=new Set();r.dias.forEach((d,i)=>{const c=DIA_COL[i%DIA_COL.length];const pts=d.paradas.map(e=>S.emp[e]?.geo).filter(Boolean);
     d.paradas.forEach((e,k)=>{const g=S.emp[e]?.geo;if(!g)return;enPlan.add(e);B.push([g.lat,g.lng]);L.marker([g.lat,g.lng],{icon:L.divIcon({className:'',html:`<div class="mk-p" style="background:${c}">${k+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]})}).bindPopup(`<b>Día ${i+1} · ${k+1}</b><br>${esc(S.emp[e].nombre)}`).addTo(vcapa)});
-    const line=L.polyline([[CENTRO.lat,CENTRO.lng],...pts.map(g=>[g.lat,g.lng]),[CENTRO.lat,CENTRO.lng]],{color:c,weight:3,opacity:.5,dashArray:'4 6'}).addTo(vcapa);
+    if(!pts.length)return;const line=L.polyline([[CENTRO.lat,CENTRO.lng],...pts.map(g=>[g.lat,g.lng]),[CENTRO.lat,CENTRO.lng]],{color:c,weight:3,opacity:.5,dashArray:'4 6'}).addTo(vcapa);
     rutaReal([CENTRO,...pts,CENTRO]).then(gj=>{if(gj&&vcapa.hasLayer(line)){vcapa.removeLayer(line);L.geoJSON(gj,{style:{color:c,weight:4,opacity:.8}}).addTo(vcapa)}})});
-  for(const e of v.sel||[]){const g=S.emp[e]?.geo;if(!g||enPlan.has(e))continue;B.push([g.lat,g.lng]);L.circleMarker([g.lat,g.lng],{radius:6,color:'#6c7280',fillOpacity:.6}).bindPopup(esc(S.emp[e].nombre)).addTo(vcapa)}
+  for(const e of r.sel||[]){const g=S.emp[e]?.geo;if(!g||enPlan.has(e))continue;B.push([g.lat,g.lng]);L.circleMarker([g.lat,g.lng],{radius:6,color:'#6c7280',fillOpacity:.6}).bindPopup(esc(S.emp[e].nombre)).addTo(vcapa)}
   if(B.length>1)vmap.fitBounds(B,{padding:[30,30],maxZoom:13})}
 const rutaCache={};async function rutaReal(pts){const q=pts.map(g=>g.lng.toFixed(5)+','+g.lat.toFixed(5)).join(';');if(rutaCache[q])return rutaCache[q];
   try{const r=await(await fetch(`https://router.project-osrm.org/route/v1/driving/${q}?overview=full&geometries=geojson`)).json();if(r.code==='Ok')return rutaCache[q]=r.routes[0].geometry}catch{}return null}
-document.addEventListener('change',ev=>{const t=ev.target;const v=S.aj.visitas;if(!t.closest('#visBox')||!v)return;
-  if(t.dataset.vsel){const s=new Set(v.sel);t.checked?s.add(t.dataset.vsel):s.delete(t.dataset.vsel);v.sel=[...s];saveCfg('ajustes',S.aj);dibujarVisitas();return}
-  if(t.id==='vAdd'&&t.value){v.sel=[...v.sel,t.value];saveCfg('ajustes',S.aj);renderVisitas();dibujarVisitas();return}
-  if(t.dataset.vk){v[t.dataset.vk]=t.dataset.vk==='svc'?+t.value:t.value;saveCfg('ajustes',S.aj);return}
-  if(t.dataset.vfecha!=null){v.fechas[t.dataset.vfecha]=t.value;saveCfg('ajustes',S.aj);return}
-  if(t.dataset.vmove&&t.value){const[i,k]=t.dataset.vmove.split(':').map(Number);const e=v.plan[i].paradas.splice(k,1)[0];
-    if(t.value==='x')v.sel=v.sel.filter(x=>x!==e);else{const j=+t.value;if(!v.plan[j])v.plan[j]={paradas:[]};v.plan[j].paradas.push(e)}
-    v.plan=v.plan.filter(d=>d.paradas.length);calcVisitas(true)}});
-document.addEventListener('click',ev=>{const t=ev.target.closest('#vCalc,[data-vhecho],[data-vcopy]');if(!t||!t.closest('#visBox'))return;const v=V();
-  if(t.id==='vCalc'){if(!vCalc)calcVisitas(false);return}
-  const i=+(t.dataset.vhecho??t.dataset.vcopy),d=v.plan?.[i];if(!d)return;const EM=visEmpresas();
-  if(t.dataset.vhecho!=null){const f=v.fechas[i]||hoyISO();let n=0;for(const e of d.paradas)for(const aid of EM.get(e)||[]){const s=segDe(S.alu[aid]);if(!s.contactos.some(c=>c.fecha===f&&c.tipo==='Visita')){s.contactos.push({fecha:f,tipo:'Visita',con:'Tutor de empresa',notas:'Visita a '+S.emp[e].nombre});save('alumnos',aid);n++}}
+// cambios en el plan: se guardan, se repinta y, si hace falta, se piden los tramos nuevos
+async function trasCambio(){const r=RD();r.dias=r.dias.filter(d=>d.paradas.length);guardaV();renderVisitas();dibujarVisitas();
+  if(await asegurarMatriz()){renderVisitas();dibujarVisitas()}}
+function quitaDeDias(r,e){for(const d of r.dias){const k=d.paradas.indexOf(e);if(k>=0){d.paradas.splice(k,1);delete d.horas?.[e]}}}
+function moverA(r,e,dest,pos){quitaDeDias(r,e);if(dest==='x'){r.sel=r.sel.filter(x=>x!==e);return}if(dest==='s')return;
+  const j=+dest;if(!r.dias[j])r.dias[j]={paradas:[],horas:{},fecha:''};r.dias[j].horas??={};const P=r.dias[j].paradas;P.splice(pos==null?P.length:pos,0,e);if(!r.sel.includes(e))r.sel.push(e)}
+document.addEventListener('change',ev=>{const t=ev.target;if(!t.closest('#visBox'))return;const v=V(),r=RD();
+  if(t.id==='vRonda'){v.actual=t.value;guardaV();renderVisitas();dibujarVisitas();asegurarMatriz().then(ok=>{if(ok){renderVisitas();dibujarVisitas()}});return}
+  if(t.id==='vNom'){r.nombre=t.value.trim()||r.nombre;guardaV();renderVisitas();return}
+  if(t.dataset.vsel){const e=t.dataset.vsel;if(t.checked){if(!r.sel.includes(e))r.sel.push(e)}else{r.sel=r.sel.filter(x=>x!==e);quitaDeDias(r,e)}trasCambio();return}
+  if(t.id==='vAdd'&&t.value){r.sel.push(t.value);trasCambio();return}
+  if(t.dataset.vk){v[t.dataset.vk]=t.dataset.vk==='svc'?+t.value:t.value;guardaV();renderVisitas();return}
+  if(t.dataset.vfecha!=null){r.dias[+t.dataset.vfecha].fecha=t.value;guardaV();return}
+  if(t.dataset.vhora){const[i,e]=t.dataset.vhora.split(':');const d=r.dias[+i];d.horas??={};if(t.value)d.horas[e]=t.value;else delete d.horas[e];guardaV();renderVisitas();return}
+  if(t.dataset.vmove&&t.value){const e=t.dataset.vmove.slice(t.dataset.vmove.indexOf(':')+1);moverA(r,e,t.value);trasCambio()}});
+document.addEventListener('click',ev=>{const t=ev.target.closest('button');if(!t||!t.closest('#visBox'))return;const v=V(),r=RD();
+  if(t.id==='vCalc'){if(vCalc)return;if(r.dias.length&&!vSeguro){vSeguro=true;renderVisitas();setTimeout(()=>{if(vSeguro){vSeguro=false;renderVisitas()}},4000);return}vSeguro=false;calcVisitas();return}
+  if(t.id==='vNueva'){const id='r'+Date.now().toString(36);v.rondas[id]={nombre:'Ronda '+(Object.keys(v.rondas).length+1),sel:null,dias:[]};v.actual=id;guardaV();renderVisitas();dibujarVisitas();return}
+  if(t.id==='vBorra'){if(t.dataset.ok){delete v.rondas[v.actual];v.actual=Object.keys(v.rondas)[0];guardaV();renderVisitas();dibujarVisitas()}else{t.dataset.ok=1;t.textContent='¿Seguro? Pulsa otra vez'}return}
+  if(t.dataset.vup||t.dataset.vdn){const[i,k]=(t.dataset.vup||t.dataset.vdn).split(':').map(Number);const P=r.dias[i].paradas,j=t.dataset.vup?k-1:k+1;[P[k],P[j]]=[P[j],P[k]];trasCambio();return}
+  if(t.dataset.vopt!=null){const d=r.dias[+t.dataset.vopt];if(!r.M){toast('Calculando tramos…');asegurarMatriz().then(ok=>ok&&t.click());return}d.paradas=optimizarDia(r,d);trasCambio();toast('Orden con menos tiempo de coche'+(Object.keys(d.horas||{}).length?' (respetando las horas acordadas)':''));return}
+  const i=+(t.dataset.vhecho??t.dataset.vcopy),d=r.dias?.[i];if(!d||(t.dataset.vhecho==null&&t.dataset.vcopy==null))return;const EM=visEmpresas();
+  if(t.dataset.vhecho!=null){const f=d.fecha||hoyISO();let n=0;for(const e of d.paradas)for(const aid of EM.get(e)||[]){const s=segDe(S.alu[aid]);if(!s.contactos.some(c=>c.fecha===f&&c.tipo==='Visita')){s.contactos.push({fecha:f,tipo:'Visita',con:'Tutor de empresa',notas:'Visita a '+S.emp[e].nombre});save('alumnos',aid);n++}}
     toast(n?`Visita anotada en ${n} alumno(s) con fecha ${fmtD(f)}`:'Ya estaban anotadas');renderVisitas();return}
-  let tt=toMin(v.salida);const txt=[`Día ${i+1}${v.fechas[i]?' ('+fmtD(v.fechas[i])+')':''} · salida ${v.salida} del CIFP`,...d.paradas.map((e,k)=>{tt+=d.legs[k]?.min||0;const r=`${deMin(tt)} ${S.emp[e]?.nombre} · ${fmtKm(d.legs[k]?.km)}`;tt+=+v.svc||0;return r}),`Vuelta: ${fmtKm(d.legs[d.paradas.length]?.km)}`].join('\n');
+  const s=simDia(r,d);const txt=[`${r.nombre} · Día ${i+1}${d.fecha?' ('+fmtD(d.fecha)+')':''} · salida ${v.salida} del CIFP`,...s.P.map(p=>`${deMin(p.llegada)} ${S.emp[p.e]?.nombre}${d.horas?.[p.e]?' (acordada '+d.horas[p.e]+')':''} · ${fmtKm(p.lg?.km)}`),`Vuelta ${deMin(s.vuelta)} · ${fmtKm(s.vu?.km)} · total ${fmtKm(s.km)}`].join('\n');
   navigator.clipboard?.writeText(txt).then(()=>toast('Ruta copiada'),()=>toast('No se pudo copiar'))});
+// arrastrar y soltar (ordenador y la mayoría de móviles); con las flechas ↑↓ y «Mover a…» se hace lo mismo
+document.addEventListener('dragstart',ev=>{const li=ev.target.closest?.('#visBox li[data-vst]');if(!li)return;vDrag=li.dataset.vst;ev.dataTransfer.effectAllowed='move';ev.dataTransfer.setData('text/plain',vDrag);li.classList.add('drag')});
+document.addEventListener('dragend',()=>{vDrag=null;document.querySelectorAll('#visBox .drag,#visBox .dover').forEach(x=>x.classList.remove('drag','dover'))});
+document.addEventListener('dragover',ev=>{if(!vDrag)return;const ol=ev.target.closest?.('#visBox ol[data-vdrop]');if(!ol)return;ev.preventDefault();document.querySelectorAll('#visBox .dover').forEach(x=>x.classList.remove('dover'));(ev.target.closest('li[data-vst]')||ol).classList.add('dover')});
+document.addEventListener('drop',ev=>{if(!vDrag)return;const ol=ev.target.closest?.('#visBox ol[data-vdrop]');if(!ol)return;ev.preventDefault();const r=RD();const[i,k]=vDrag.split(':').map(Number);const e=r.dias[i]?.paradas[k];if(!e)return;
+  const j=+ol.dataset.vdrop,li=ev.target.closest('li[data-vst]');let pos=li?+li.dataset.vst.split(':')[1]:null;const hora=r.dias[i].horas?.[e];
+  if(li&&i===j&&k<pos)pos--;moverA(r,e,j,pos);if(hora)r.dias[j].horas[e]=hora;vDrag=null;trasCambio()});
 addEventListener('hashchange',()=>{if(location.hash==='#visitas')abrirVisitas()});
 
 boot();
