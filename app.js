@@ -1,6 +1,6 @@
 
 {
-const S={emp:{},alu:{},campos:[],aj:{fechaInicio:'',incluirTramite:true,criterio:'primeras'}};
+const S={gd:{},gdMeta:null,emp:{},alu:{},campos:[],aj:{fechaInicio:'',incluirTramite:true,criterio:'primeras'}};
 let db=null,selA=null,res=null;const M={mode:'alumno',sel:null,drag:false,focusE:null};
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -92,6 +92,7 @@ function renderEdA(){const box=$('#edA');if(box.contains(document.activeElement)
   <label>Municipio<input data-f="municipio" value="${esc(a.municipio)}"></label>
   <label>Email<input data-f="email" value="${esc(a.email)}"></label>
   <label>Email personal<input data-f="email2" value="${esc(a.email2)}"></label>
+  <label>DNI / NIE<input data-f="dni" value="${esc(a.dni||'')}"></label>
   <label>Teléfono<input data-f="telefono" type="tel" value="${esc(a.telefono||'')}"></label>
   <label>¿Hará la FCT este curso?<select data-f="estado">${Object.entries(ESTADOS).map(([k,v])=>`<option value="${k}"${k===a.estado?' selected':''}>${v}</option>`).join('')}</select></label>
   <label>Motivo / detalle<input data-f="motivo" value="${esc(a.motivo)}"></label>
@@ -286,7 +287,7 @@ async function seguridad(){const{data:fs}=await SB.auth.mfa.listFactors();const 
 // ---------- carga y sincronización ----------
 async function cargar(){$('#load').style.display='block';$('#load').textContent='Cargando datos…';
   const r=await SB.from('docs').select('col,id,data').range(0,9999);if(r.error){$('#load').textContent='Error al leer datos: '+r.error.message;return}
-  S.emp={};S.alu={};for(const d of r.data){if(d.col==='empresas')S.emp[d.id]=d.data;else if(d.col==='alumnos')S.alu[d.id]=d.data;else if(d.col==='config'){if(d.id==='campos')S.campos=d.data.lista||[];if(d.id==='ajustes')S.aj={...S.aj,...d.data}}}
+  S.emp={};S.alu={};S.gd={};S.gdMeta=null;for(const d of r.data){if(d.col==='gdcan'){S.gd[d.id]=d.data;continue}if(d.col==='gdcan_meta'){S.gdMeta=d.data;continue}if(d.col==='empresas')S.emp[d.id]=d.data;else if(d.col==='alumnos')S.alu[d.id]=d.data;else if(d.col==='config'){if(d.id==='campos')S.campos=d.data.lista||[];if(d.id==='ajustes')S.aj={...S.aj,...d.data}}}
   if(!r.data.length){$('#load').innerHTML='<div class="card" style="text-align:left"><h2>La base de datos está vacía</h2><p>Importa la copia de seguridad que descargaste de la versión anterior (archivo <code>FCT_1SEA_copia_….json</code>).</p><button id="restore">Importar copia</button></div>'}
   else $('#load').style.display='none';
   $('#edA')._id=null;render();if(location.hash==='#mapa')abrirMapa()}
@@ -394,7 +395,7 @@ const hoyISO=()=>new Date().toISOString().slice(0,10);
 const diasEntre=(a,b)=>Math.round((new Date(b)-new Date(a))/864e5);
 const segDe=a=>{a.seg??={};const s=a.seg;s.cuestA??={};s.cuestT??={};s.contactos??=[];return s};
 function estHito(hecho,h){if(hecho)return'ok';if(!h.fecha)return'';const d=diasEntre(hoyISO(),h.fecha);return d<0?'bad':d<=7?'wa':''}
-function segAvisos(){const av=[];const H=hitos();
+function segAvisos(){const av=[...gdAvisos()];const H=hitos();
   for(const[id,a]of sortedAlu()){if(a.estado!=='realiza')continue;const s=segDe(a),r=res[id];
     for(const h of H){if(estHito(s.cuestA[h.id],h)==='bad')av.push([id,`${a.nombre}: falta el cuestionario ${h.label.toLowerCase()} del alumno (vencía ${fmtD(h.fecha)})`]);
       if(estHito(s.cuestT[h.id]?.fecha,h)==='bad')av.push([id,`${a.nombre}: falta el seguimiento ${h.label.toLowerCase()} con el tutor de empresa${r?.emp?' ('+S.emp[r.emp]?.nombre+')':''}`])}
@@ -408,22 +409,22 @@ function renderSeg(){const box=$('#segBox');if(!box)return;const H=hitos();const
   const obj=horasObj();
   const avs=segAvisos(),hechos=rows.reduce((n,[,a])=>n+H.filter(h=>segDe(a).cuestA[h.id]).length,0),totQ=rows.length*H.length;
   const sinFechas=H.every(h=>!h.fecha);
-  const cards=rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp];const hc=+s.horasConf||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
+  const cards=rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp];const hc=+(s.horasConf||gdDe(id)?.horasConf)||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
     const pend=avs.filter(x=>x[0]===id).length;
     return`<button class="scard" data-seg="${id}"><div class="sc-top"><b>${esc(a.nombre)}</b>${pend?`<span class="tag bad">${pend}</span>`:'<span class="tag ok">al día</span>'}</div>
       <small class="note">${e?esc(e.nombre):'Sin empresa asignada'}</small>
-      <div class="sc-row"><span>Horas</span><div class="bars" style="flex:1;width:auto"><i style="width:${pct}%;background:${pct>=100?'#0f7b0f':'#005fb8'}"></i></div><small>${hc}${obj?' / '+obj:''} h</small></div>
+      ${gdDe(id)?`<div class="sc-row"><span>GDCAN</span><small>${gdResumen(gdDe(id))}</small></div>`:''}<div class="sc-row"><span>Horas</span><div class="bars" style="flex:1;width:auto"><i style="width:${pct}%;background:${pct>=100?'#0f7b0f':'#005fb8'}"></i></div><small>${hc}${obj?' / '+obj:''} h</small></div>
       <div class="sc-row"><span>Alumno</span><div>${H.map(h=>dot(estHito(s.cuestA[h.id],h),'',h.label)).join('')}</div>${+s.porRellenar?`<small style="color:var(--bai)">${s.porRellenar} d sin diario</small>`:''}</div>
       <div class="sc-row"><span>Tutor</span><div>${H.map(h=>dot(estHito(s.cuestT[h.id]?.fecha,h),'',h.label)).join('')}</div><small class="note">${ult?'contacto '+fmtD(ult).slice(0,5):'sin contactos'}</small></div></button>`}).join('');
-  box.innerHTML=`<div class="segsum">
+  box.innerHTML=gdBanner()+`<div class="segsum">
     <div class="kpi"><div class="ic ${avs.length?'c-r':'c-g'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 8v5M12 16.5v.01"/><circle cx="12" cy="12" r="9"/></svg></div><div class="t"><b>${avs.length}</b><span>cosas pendientes</span></div></div>
     <div class="kpi"><div class="ic c-g"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></div><div class="t"><b>${hechos} / ${totQ}</b><span>cuestionarios de alumnos hechos</span></div></div></div>
   <div class="card calstrip"><div class="row" style="justify-content:space-between;margin-bottom:8px"><b>Calendario</b><button class="ghost" id="segCal">${sinFechas?'Poner fechas y horas':'Editar'}</button></div>
     ${sinFechas?'<p class="note" style="margin:0">Aún no hay fechas límite. Ponlas para que la web te avise de lo que vence.</p>':`<div class="hitos">${H.map(h=>`<div class="hito ${h.fecha&&h.fecha<hoyISO()?'pas':''}"><small>${h.label.replace('Intermedio ','Int. ')}</small><b>${h.fecha?fmtD(h.fecha).slice(0,5):'—'}</b></div>`).join('')}</div>`}</div>
   <div class="scards">${cards||'<p class="note">Ningún alumno hará la FCT todavía.</p>'}</div>
   <div class="segtbl"><div class="tbl scroll"><table><thead><tr><th>Alumno</th><th>Empresa · tutor</th><th>Horas</th><th class="n">Por rellenar</th><th>Anexos</th><th>Cuestionarios alumno</th><th>Seguimiento tutor</th><th>Último contacto</th></tr></thead><tbody>
-  ${rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp],tut=(e?.contactos||[]).find(c=>/tutor/i.test(c.rol))||(e?.contactos||[])[0];
-    const hc=+s.horasConf||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
+  ${rows.map(([id,a])=>{const s=segDe(a),r=res[id],e=r?.emp&&S.emp[r.emp],hcG=gdDe(id)?.horasConf,tut=(e?.contactos||[]).find(c=>/tutor/i.test(c.rol))||(e?.contactos||[])[0];
+    const hc=+(s.horasConf||gdDe(id)?.horasConf)||0,pct=obj?Math.min(100,hc/obj*100):0;const ult=(s.contactos||[]).map(c=>c.fecha).sort().pop();
     return`<tr class="click" data-seg="${id}"><td>${esc(a.nombre)}</td><td>${e?esc(e.nombre):'<span class="note">sin asignar</span>'}${tut?.nombre?`<br><small class="note">${esc(tut.nombre)}</small>`:''}</td>
     <td class="nw">${obj?`<div class="bars" style="width:90px"><i style="width:${pct}%;background:${pct>=100?'#0f7b0f':'#005fb8'}"></i></div><small>${hc} / ${obj} h</small>`:`<small>${hc?hc+' h':'—'}</small>`}</td>
     <td class="n">${+s.porRellenar?`<span class="tag bad">${s.porRellenar}</span>`:'<small class="note">—</small>'}</td>
@@ -440,6 +441,7 @@ function openSeg(id){const a=S.alu[id];if(!a)return;const s=segDe(a),H=hitos(),r
   const tipos=['Llamada','Visita','Email','WhatsApp','Reunión','Otro'];
   $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">${esc(a.nombre)}</h2><button class="sec" id="closeOv">Cerrar</button></div>
   <p class="info" style="margin-top:12px">${e?`<b>${esc(e.nombre)}</b> · ${esc((e.contactos||[]).map(c=>[c.nombre,c.rol,c.telefono,c.email].filter(Boolean).join(' · ')).join(' | ')||e.telefono||'sin contacto')}`:'Sin empresa asignada'}</p>
+  ${gdFichaHTML(id)}
   <h3>Horas y asistencia</h3><div class="grid">${f('horasConf','Horas confirmadas en GDCAN')}${f('diasAsist','Días de asistencia')}${f('diasNoAsist','Días de no asistencia')}${f('porRellenar','Días del diario por rellenar')}${f('horario','Horario','text')}</div>
   <div class="row" style="margin-top:10px;gap:16px"><label class="check"><input type="checkbox" data-sgc="anexoI"${s.anexoI?' checked':''}> Anexo I firmado</label><label class="check"><input type="checkbox" data-sgc="anexoII"${s.anexoII?' checked':''}> Anexo II</label></div>
   <h3>Cuestionarios del alumno</h3><div class="grid">${H.map(h=>`<label>${h.label}${h.fecha?` <small class="note">(límite ${fmtD(h.fecha)})</small>`:''}<div class="row" style="gap:6px;flex-wrap:nowrap"><input type="date" data-qa="${h.id}" value="${esc(s.cuestA[h.id]||'')}" style="margin-top:6px"><button class="ghost" data-hoy="qa:${h.id}" style="margin-top:6px">Hoy</button></div></label>`).join('')}</div>
@@ -550,6 +552,32 @@ function cerrarDet(){if(history.state?.det)history.back();else $('#v-alumnos').c
   c.addEventListener('touchstart',e=>{if(innerWidth>760||c.scrollTop>0){y0=null;return}const ta=e.target.closest('textarea,select,input[type=date]');if(ta&&ta.scrollTop>0){y0=null;return}y0=e.touches[0].clientY;dy=0;c.style.transition='none'},{passive:true});
   c.addEventListener('touchmove',e=>{if(y0==null)return;dy=e.touches[0].clientY-y0;if(dy>0&&c.scrollTop<=0){e.preventDefault();c.style.transform=`translateY(${dy}px)`}else if(dy<0){y0=null;c.style.transform=''}},{passive:false});
   c.addEventListener('touchend',()=>{if(y0==null)return;c.style.transition='transform .2s';if(dy>110){c.style.transform='translateY(100%)';setTimeout(()=>{closeE();c.style.transition=''},180)}else c.style.transform='';y0=null})}
+
+// ---------- datos de GDCAN (los escribe el robot; aquí solo se leen) ----------
+const tokens=s=>GEO.norm(s).replace(/[^a-z ]/g,' ').split(' ').filter(w=>w.length>1).sort().join(' ');
+function gdDe(id){const a=S.alu[id];if(!a)return null;if(a.dni&&S.gd[a.dni.toUpperCase()])return S.gd[a.dni.toUpperCase()];
+  const t=tokens(a.nombre);return Object.values(S.gd).find(g=>tokens(g.nombre)===t)||null}
+function gdFecha(){const m=S.gdMeta;if(!m)return'';const d=new Date(m.fecha);return isNaN(d)?'':d.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}
+function gdBanner(){const m=S.gdMeta;if(!m)return'<div class="gdban">GDCAN: aún no hay ninguna lectura.</div>';
+  return m.ok?`<div class="gdban ok">GDCAN leído el ${esc(gdFecha())} · ${esc(m.practicas??0)} práctica(s)</div>`:`<div class="gdban bad">Última lectura de GDCAN con problemas (${esc(gdFecha())}): ${esc(m.error||(m.errores||[]).join('; ')||'error')}</div>`}
+const tick=v=>v===true?'<span class="tag ok">✓</span>':v===false?'<span class="tag bad">✗</span>':'<span class="tag">?</span>';
+function gdResumen(g){return`${esc(g.horasConf??0)}/${esc(g.horasPrev??'?')} h · Horario ${tick(g.horario)} Plan ${tick(g.plan)} Calendario ${tick(g.calendario)}`}
+function gdAvisos(){const av=[];for(const[id,a]of sortedAlu()){if(a.estado!=='realiza')continue;const g=gdDe(id);if(!g)continue;
+    const ge=gdEmpresa(g);if(res[id]?.emp&&ge&&ge!==res[id].emp)av.push([id,`${a.nombre}: en GDCAN figura en otra empresa (${g.empresa})`]);
+    if(g.inicio&&diasEntre(hoyISO(),g.inicio)<=7){for(const[k,l]of[['horario','horario'],['plan','plan formativo'],['calendario','calendario']])if(g[k]===false)av.push([id,`${a.nombre}: falta el ${l} en GDCAN (empieza el ${fmtD(g.inicio)})`])}}
+  return av}
+function gdEmpresa(g){const c=GEO.norm(g.ficha?.empresa?.cif||''),n=tokens((g.ficha?.empresa?.nombre||g.empresa||'').split('/')[0]);for(const[eid,e]of Object.entries(S.emp)){if(c&&GEO.norm(e.nif||'')===c)return eid}for(const[eid,e]of Object.entries(S.emp)){if(n&&tokens(e.nombre).replace(/\b(sa|sl|slu|sau)\b/g,'').trim()===n.replace(/\b(sa|sl|slu|sau)\b/g,'').trim())return eid}return null}
+function gdFichaHTML(id){const g=gdDe(id);if(!g)return`<h3>GDCAN</h3><p class="note">Sin práctica en GDCAN todavía.</p>`;const f=g.ficha||{},e=f.empresa||{};
+  const seg=(L,t)=>L?.length?`<div class="tbl scroll"><table><tbody>${L.map(s=>`<tr><td>${esc(s.tipo)}</td><td class="nw">prev. ${fmtD(s.prevista)}</td><td>${tick(s.realizado)}</td><td class="nw">${fmtD(s.fecha)}</td><td>${esc(s.incidencia||'')}</td></tr>`).join('')}</tbody></table></div>`:`<p class="note">${t}: sin cuestionarios aún.</p>`;
+  return`<h3>GDCAN <small class="note">(leído ${esc(gdFecha())})</small></h3><div class="info">
+    <b>${esc(g.empresa)}</b> · ${fmtD(g.inicio)} → ${fmtD(g.fin)} · estado ${esc(f.estado||g.estadoSS||'—')}<br>${gdResumen(g)}<br>
+    Tutor/a de empresa: <b>${esc(e.tutor||'—')}</b>${e.tutorEmail?' · '+esc(e.tutorEmail):''} ${e.tutor&&gdEmpresa(g)?`<button class="ghost" data-gdtutor="${id}">Añadir a la empresa</button>`:''}<br>
+    Diario: ${esc(f.diario?.horas??0)} h en ${esc(f.diario?.dias?.length??0)} día(s) · Comunicaciones: ${esc(f.comunicaciones??0)} · Solicitudes: ${esc(f.solicitudes??0)}</div>
+    <p class="note" style="margin-top:8px"><b>Cuestionarios del alumno</b></p>${seg(f.seguimientosAlumno,'Alumno')}<p class="note" style="margin-top:8px"><b>Seguimientos al tutor de empresa</b></p>${seg(f.seguimientosTutor,'Tutor')}`}
+document.addEventListener('click',ev=>{const t=ev.target.closest('[data-gdtutor]');if(!t)return;const id=t.dataset.gdtutor,g=gdDe(id);if(!g)return;const eid=gdEmpresa(g),e=S.emp[eid];if(!e){toast('Esa empresa de GDCAN no está en tu lista de empresas');return}
+  const tu=g.ficha.empresa;e.contactos??=[];const ya=e.contactos.find(c=>GEO.norm(c.nombre)===GEO.norm(tu.tutor)||(tu.tutorEmail&&c.email===tu.tutorEmail));
+  if(ya){ya.rol=ya.rol||'Tutor/a de empresa';if(!ya.email&&tu.tutorEmail)ya.email=tu.tutorEmail}else e.contactos.unshift({nombre:tu.tutor,rol:'Tutor/a de empresa',telefono:'',email:tu.tutorEmail||''});
+  save('empresas',eid);toast('Tutor añadido a '+e.nombre)});
 
 boot();
 
