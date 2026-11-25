@@ -94,7 +94,7 @@ function renderEdA(){const box=$('#edA');if(box.contains(document.activeElement)
   <label>Email<input data-f="email" value="${esc(a.email)}"></label>
   <label>Email personal<input data-f="email2" value="${esc(a.email2)}"></label>
   <label>DNI / NIE<input data-f="dni" value="${esc(a.dni||'')}"></label>
-  <label>NUS (nº Seguridad Social) ${docTagNus(a)}<input data-f="nus" value="${esc(nusFmt(a.nus))}" inputmode="numeric" placeholder="12 dígitos"></label>
+  <label>NUSS (nº Seguridad Social) ${docTagNus(a)}<input data-f="nus" value="${esc(nusFmt(a.nus))}" inputmode="numeric" placeholder="12 dígitos"></label>
   <div class="dck" style="grid-column:1/-1">${docChecks(selA,a)}</div>
   <label>Teléfono<input data-f="telefono" type="tel" value="${esc(a.telefono||'')}"></label>
   <label>¿Hará la FCT este curso?<select data-f="estado">${Object.entries(ESTADOS).map(([k,v])=>`<option value="${k}"${k===a.estado?' selected':''}>${v}</option>`).join('')}</select></label>
@@ -490,7 +490,7 @@ const PLANT_DEF=[
  {id:'p3',nombre:'Diario sin rellenar (alumno)',para:'alumno',asunto:'FCT · diario de actividades pendiente',cuerpo:'Hola, {nombre_alumno}:\n\nTienes {dias_diario} día(s) del diario de actividades sin rellenar en GDCAN. Por favor, ponte al día lo antes posible.\n\nUn saludo,\n{firma}'},
  {id:'p5',nombre:'Diario al día para el cuestionario (alumno)',para:'alumno',asunto:'FCT · pon el diario al día',cuerpo:'Hola, {nombre_alumno}:\n\nPara que a tu tutor/a de empresa le llegue el cuestionario de seguimiento de GDCAN, tu diario tiene que estar cumplimentado hasta hoy. Por favor, ponlo al día cuanto antes.\n\nRecuerda también que solo cuentan las horas de los días marcados como cumplimentados.\n\nUn saludo,\n{firma}'},
  {id:'p6',nombre:'Aviso del cuestionario: spam y una sola vez (tutor de empresa)',para:'tutor',asunto:'FCT {alumno} · cuestionario de seguimiento de GDCAN',cuerpo:'Buenos días, {tutor}:\n\nLe llegará (o le habrá llegado) por correo el cuestionario de seguimiento {hito} de {alumno} desde GDCAN. Si no lo encuentra, revise la carpeta de spam o correo no deseado.\n\nTenga en cuenta que el cuestionario solo se puede enviar una vez y después no se puede modificar, así que le ruego que repase las respuestas antes de guardarlo.\n\nMuchas gracias. Un saludo,\n{firma}'},
- {id:'p7',nombre:'Falta el NUS y su certificado (alumno)',para:'alumno',asunto:'FCT · número de la Seguridad Social (NUS)',cuerpo:'Hola:\n\nPara poder darte de alta en la Seguridad Social durante las prácticas necesito tu número de la Seguridad Social (NUS) y el documento en el que te lo asignan. Si aún no lo tienes, puedes pedirlo en la sede electrónica de la Seguridad Social (Importass) o en una oficina de la TGSS.\n\nEnvíamelo respondiendo a este correo, por favor. Yo lo entregaré en secretaría para tu expediente.\n\nUn saludo,\n{firma}'},
+ {id:'p7',nombre:'Falta el NUSS y su certificado (alumno)',para:'alumno',asunto:'FCT · número de la Seguridad Social (NUSS)',cuerpo:'Hola:\n\nPara poder darte de alta en la Seguridad Social durante las prácticas necesito tu número de la Seguridad Social (NUSS) y el documento en el que te lo asignan. Si aún no lo tienes, puedes pedirlo en la sede electrónica de la Seguridad Social (Importass) o en una oficina de la TGSS.\n\nEnvíamelo respondiendo a este correo, por favor. Yo lo entregaré en secretaría para tu expediente.\n\nUn saludo,\n{firma}'},
  {id:'p4',nombre:'Recordatorio de cuestionario (alumno)',para:'alumno',asunto:'FCT · cuestionario {hito} pendiente',cuerpo:'Hola, {nombre_alumno}:\n\nTe recuerdo que tienes pendiente el cuestionario {hito} en GDCAN (fecha límite: {fecha_limite}).\n\nUn saludo,\n{firma}'}];
 const plantillas=()=>{if(!S.aj.plantillas?.length)return PLANT_DEF;const ids=new Set(S.aj.plantillas.map(p=>p.id));return[...S.aj.plantillas,...PLANT_DEF.filter(p=>!ids.has(p.id)&&!(S.aj.plBorradas||[]).includes(p.id))]};
 const firma=()=>S.aj.firma??'Roberto Chávez Trujillo\nTutor de FCT · 1º SEA\nCIFP Virgen de Las Nieves';
@@ -809,8 +809,8 @@ document.addEventListener('drop',ev=>{if(!vDrag)return;const ol=ev.target.closes
   if(li&&i===j&&k<pos)pos--;moverA(r,e,j,pos);if(hora)r.dias[j].horas[e]=hora;vDrag=null;trasCambio()});
 addEventListener('hashchange',()=>{if(location.hash==='#visitas')abrirVisitas()});
 
-// ---------- Documentación del alumnado (NUS y otros requisitos con tick) ----------
-const DOC_DEF=[{id:'nusCert',nombre:'Certificado del NUS recibido'},{id:'nusSecre',nombre:'Entregado en secretaría'}];
+// ---------- Documentación del alumnado (NUSS y otros requisitos con tick) ----------
+const DOC_DEF=[{id:'nusCert',nombre:'Certificado del NUSS recibido'},{id:'nusSecre',nombre:'Entregado en secretaría'}];
 const docReq=()=>S.aj.docReq?.length?S.aj.docReq:DOC_DEF;
 // NUSS: 12 dígitos = provincia (2) + número (8) + control (2); control = (provincia·10^8 + número) mod 97 (o ·10^7 si número < 10^7)
 function nusOk(n){const d=String(n||'').replace(/\D/g,'');if(d.length!==12)return false;const p=+d.slice(0,2),x=+d.slice(2,10),c=+d.slice(10);
@@ -818,15 +818,15 @@ function nusOk(n){const d=String(n||'').replace(/\D/g,'');if(d.length!==12)retur
 const nusFmt=n=>{const d=String(n||'').replace(/\D/g,'');return d.length===12?d.slice(0,2)+' '+d.slice(2,10)+' '+d.slice(10):String(n||'')};
 const aluDocs=()=>sortedAlu().filter(([,a])=>a.estado!=='baja');
 function docPend(a){return !a.nus||docReq().some(r=>!a.docs?.[r.id])}
-function docTagNus(a){if(!a.nus)return'<span class="tag bad">Sin NUS</span>';return nusOk(a.nus)?'<span class="tag ok">NUS válido</span>':'<span class="tag wa" title="El dígito de control no cuadra: revisa el número">Revisar NUS</span>'}
+function docTagNus(a){if(!a.nus)return'<span class="tag bad">Sin NUSS</span>';return nusOk(a.nus)?'<span class="tag ok">NUSS válido</span>':'<span class="tag wa" title="El dígito de control no cuadra: revisa el número">Revisar NUSS</span>'}
 function docChecks(id,a){return docReq().map(r=>`<label class="ck"><input type="checkbox" data-doc="${id}:${esc(r.id)}"${a.docs?.[r.id]?' checked':''}><span>${esc(r.nombre)}</span></label>`).join('')}
 function openDocs(){const L=aluDocs(),R=docReq();const n=L.length,cN=L.filter(([,a])=>a.nus).length,cR=R.map(r=>L.filter(([,a])=>a.docs?.[r.id]).length);
   const pend=L.filter(([,a])=>docPend(a));
   $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Documentación del alumnado</h2><button class="sec" id="closeOv">Cerrar</button></div>
-  <div class="dsum"><span><b>${cN}/${n}</b> con NUS</span>${R.map((r,i)=>`<span><b>${cR[i]}/${n}</b> ${esc(r.nombre.charAt(0).toLowerCase()+r.nombre.slice(1))}</span>`).join('')}</div>
+  <div class="dsum"><span><b>${cN}/${n}</b> con NUSS</span>${R.map((r,i)=>`<span><b>${cR[i]}/${n}</b> ${esc(r.nombre.charAt(0).toLowerCase()+r.nombre.slice(1))}</span>`).join('')}</div>
   ${pend.length?`<div class="row" style="margin:4px 0 12px"><button class="sec" id="docMail">Escribir a los ${pend.length} pendientes</button><button class="ghost" id="docCopy">Copiar sus emails</button></div>`:'<p class="info">Todo el alumnado tiene la documentación completa.</p>'}
   <div class="dlist">${L.map(([id,a])=>`<div class="drow${docPend(a)?'':' dok'}"><div class="dname"><b>${esc(a.nombre)}</b>${docTagNus(a)}</div>
-    <input class="dnus" data-nus="${id}" value="${esc(nusFmt(a.nus))}" placeholder="NUS (12 dígitos)" inputmode="numeric" aria-label="NUS de ${esc(a.nombre)}">
+    <input class="dnus" data-nus="${id}" value="${esc(nusFmt(a.nus))}" placeholder="NUSS (12 dígitos)" inputmode="numeric" aria-label="NUSS de ${esc(a.nombre)}">
     <div class="dck">${docChecks(id,a)}</div></div>`).join('')}</div>
   <details style="margin-top:14px"><summary class="note" style="cursor:pointer">Requisitos que se marcan (puedes añadir otros documentos)</summary>
     <div style="display:grid;gap:6px;margin-top:8px">${R.map((r,i)=>`<div class="row"><input data-dreq="${i}" value="${esc(r.nombre)}" style="flex:1;margin:0"><button class="ghost" data-dreqdel="${i}" aria-label="Quitar requisito">Quitar</button></div>`).join('')}
@@ -836,7 +836,7 @@ const correosPend=()=>aluDocs().filter(([,a])=>docPend(a)).map(([,a])=>a.email||
 document.addEventListener('change',ev=>{const t=ev.target;
   if(t.dataset.doc){const[i,k]=[t.dataset.doc.slice(0,t.dataset.doc.indexOf(':')),t.dataset.doc.slice(t.dataset.doc.indexOf(':')+1)];const a=S.alu[i];if(!a)return;(a.docs??={})[k]=t.checked;if(!t.checked)delete a.docs[k];save('alumnos',i);
     if(t.closest('#ovc'))openDocs();else render();return}
-  if(t.dataset.nus){const a=S.alu[t.dataset.nus];if(!a)return;a.nus=t.value.replace(/\D/g,'');save('alumnos',t.dataset.nus);if(a.nus&&!nusOk(a.nus))toast('Ese NUS no cuadra con su dígito de control: revísalo');openDocs();return}
+  if(t.dataset.nus){const a=S.alu[t.dataset.nus];if(!a)return;a.nus=t.value.replace(/\D/g,'');save('alumnos',t.dataset.nus);if(a.nus&&!nusOk(a.nus))toast('Ese NUSS no cuadra con su dígito de control: revísalo');openDocs();return}
   if(t.dataset.dreq!=null){const R=[...docReq()];R[+t.dataset.dreq]={...R[+t.dataset.dreq],nombre:t.value.trim()||R[+t.dataset.dreq].nombre};S.aj.docReq=R;saveCfg('ajustes',S.aj);openDocs()}});
 document.addEventListener('click',ev=>{const t=ev.target.closest('#docA,#docMail,#docCopy,#dReqAdd,[data-dreqdel]');if(!t)return;
   if(t.id==='docA')return openDocs();
