@@ -847,6 +847,45 @@ document.addEventListener('click',ev=>{const t=ev.target.closest('#docA,#docMail
   const p=plantillas().find(x=>x.id==='p7')||PLANT_DEF.find(x=>x.id==='p7'),as=p.asunto,tx=p.cuerpo.replace(/\{firma\}/g,firma()).replace(/\{nombre_alumno\}/g,'').replace(/\{[^}]+\}/g,''),c=S.aj.correo||'mailto',X=encodeURIComponent,bcc=E.join(',');
   abrirURL(c==='outlook'?`https://outlook.office.com/mail/deeplink/compose?bcc=${X(bcc)}&subject=${X(as)}&body=${X(tx)}`:c==='gmail'?`https://mail.google.com/mail/?view=cm&fs=1&bcc=${X(bcc)}&su=${X(as)}&body=${X(tx)}`:`mailto:?bcc=${X(bcc)}&subject=${X(as)}&body=${X(tx)}`)});
 
+// ---------- Lista para llamar a empresas: demanda por preferencia, contactos, plazas y respuesta ----------
+const LLAM_EST={'':'Sin llamar',pend:'Pendiente de respuesta',si:'Acepta',no:'No acepta'};
+let llFiltro='todas';
+function listaLlamadas(){const act=Object.entries(S.alu).filter(([,a])=>a.estado==='realiza');const d={};
+  for(const[aid,a]of act)(a.prefs||[]).forEach((eid,i)=>{if(!S.emp[eid])return;(d[eid]??={id:eid,r:[[],[],[],[],[]]}).r[i]?.push(aid)});
+  return Object.values(d).map(x=>({...x,e:S.emp[x.id],n1:x.r[0].length,tot:x.r.reduce((s,l)=>s+l.length,0)}))
+    .sort((a,b)=>b.n1-a.n1||b.tot-a.tot||a.e.nombre.localeCompare(b.e.nombre))}
+const nomC=n=>esc((n||'').split(',').reverse().join(' ').trim());
+function contactosHTML(e){const C=[...(e.contactos||[])];if(e.telefono&&!C.some(c=>c.telefono===e.telefono))C.push({nombre:'Centralita',telefono:e.telefono});
+  if(!C.length)return'<span class="note">Sin contacto: añádelo en la ficha de la empresa.</span>';
+  return C.map(c=>`<div class="llc"><b>${esc(c.nombre||'Contacto')}</b>${c.rol?' · '+esc(c.rol):''}${c.telefono?` · <a href="tel:${esc(String(c.telefono).replace(/\s/g,''))}">${esc(c.telefono)}</a>`:''}${c.email?` · <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`:''}</div>`).join('')}
+function openLlamadas(){const L=listaLlamadas();const F=L.filter(x=>llFiltro==='todas'||llFiltro==='primera'&&x.n1||(x.e.llamada?.estado||'')===(llFiltro==='sin'?'':llFiltro));
+  const cuenta=k=>L.filter(x=>(x.e.llamada?.estado||'')===k).length;
+  $('#ovc').innerHTML=`<div class="row" style="justify-content:space-between"><h2 style="margin:0">Llamadas a empresas</h2><button class="sec" id="closeOv">Cerrar</button></div>
+  <p class="note">Empresas elegidas por el alumnado que hará FCT, ordenadas por cuántos las ponen como 1ª opción. Apunta las plazas que te confirmen: el reparto automático las usa al momento.</p>
+  <div class="row llf"><select id="llF" style="width:auto;margin:0"><option value="todas">Todas (${L.length})</option><option value="primera"${llFiltro==='primera'?' selected':''}>Con alguna 1ª opción (${L.filter(x=>x.n1).length})</option>${Object.entries(LLAM_EST).map(([k,t])=>`<option value="${k||'sin'}"${llFiltro===(k||'sin')?' selected':''}>${t} (${cuenta(k)})</option>`).join('')}</select>
+    <button class="ghost" id="llCsv">Descargar CSV</button></div>
+  <div class="llist">${F.map((x,i)=>{const e=x.e,ll=e.llamada||{},pl=e.plazas==null||e.plazas===''?'':e.plazas,falta=pl!==''&&x.n1>+pl;
+    return`<div class="llrow ll-${ll.estado||'sin'}"><div class="llh"><span class="lln">${x.n1}</span><div style="min-width:0"><b>${esc(e.nombre)}</b>${e.activa===false?' <span class="tag">desactivada</span>':''}${concTag(e)}
+      <div class="note">${x.n1} en 1ª opción · ${x.tot} en total (${x.r.map((l,k)=>l.length?`${k+1}ª: ${l.length}`:'').filter(Boolean).join(' · ')})${e.turno?' · turno '+esc(e.turno):''}${e.municipio?' · '+esc(e.municipio):''}</div></div></div>
+      <div class="llb"><div class="llal">${x.r.map((l,k)=>l.length?`<div><span class="tag ${k?'':'ok'}">${k+1}ª</span> ${l.map(a=>nomC(S.alu[a].nombre)).join(', ')}</div>`:'').join('')}</div>
+        <div class="llcs">${contactosHTML(e)}</div>
+      <div class="llf2"><label>Plazas que acepta<input type="number" min="0" data-llpl="${x.id}" value="${esc(pl)}" placeholder="?"></label>
+        <label>Respuesta<select data-llest="${x.id}">${Object.entries(LLAM_EST).map(([k,t])=>`<option value="${k}"${(ll.estado||'')===k?' selected':''}>${t}</option>`).join('')}</select></label>
+        <label class="llnota">Nota<input data-llnota="${x.id}" value="${esc(ll.nota||'')}" placeholder="p. ej. llamar el lunes a partir de las 10"></label>
+        ${falta?`<p class="note bad" style="grid-column:1/-1;margin:0">Le piden ${x.n1} en 1ª opción y acepta ${pl}: ${x.n1-pl} no podrán ir a su 1ª opción.</p>`:''}${ll.fecha?`<p class="note" style="grid-column:1/-1;margin:0">Última anotación: ${fmtD(ll.fecha)}</p>`:''}</div></div></div>`}).join('')||'<p class="note">No hay empresas con ese filtro.</p>'}</div>`;
+  $('#ov').classList.add('on')}
+document.addEventListener('change',ev=>{const t=ev.target;
+  if(t.id==='llF'){llFiltro=t.value;openLlamadas();return}
+  const id=t.dataset.llpl||t.dataset.llest||t.dataset.llnota;if(!id||!S.emp[id])return;const e=S.emp[id];
+  if(t.dataset.llpl){e.plazas=t.value===''?null:Math.max(0,+t.value);}
+  else{e.llamada={...(e.llamada||{})};if(t.dataset.llest){e.llamada.estado=t.value;if(t.value==='no'&&!(e.plazas===0))e.plazas=0}else e.llamada.nota=t.value.trim()}
+  (e.llamada??={}).fecha=hoyISO();save('empresas',id);render();openLlamadas()});
+document.addEventListener('click',ev=>{const t=ev.target.closest('#callL,#llCsv');if(!t)return;if(t.id==='callL')return openLlamadas();
+  const L=listaLlamadas(),q=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return'"'+s.replace(/"/g,'""')+'"'};
+  const filas=[['Empresa','1ª opción','Total','Alumnado 1ª opción','Alumnado 2ª-5ª','Contactos','Plazas que acepta','Respuesta','Nota']].concat(L.map(x=>[x.e.nombre,x.n1,x.tot,x.r[0].map(a=>S.alu[a].nombre).join('; '),x.r.slice(1).flatMap((l,k)=>l.map(a=>S.alu[a].nombre+' ('+(k+2)+'ª)')).join('; '),
+    [...(x.e.contactos||[])].map(c=>[c.nombre,c.rol,c.telefono,c.email].filter(Boolean).join(' / ')).concat(x.e.telefono?['Centralita '+x.e.telefono]:[]).join(' | '),x.e.plazas??'',LLAM_EST[x.e.llamada?.estado||''],x.e.llamada?.nota||'']));
+  const blob=new Blob(['﻿'+filas.map(f=>f.map(q).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='llamadas_empresas.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)});
+
 boot();
 
 }
