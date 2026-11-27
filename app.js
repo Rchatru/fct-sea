@@ -605,7 +605,7 @@ const palabras=s=>tokens(s).split(' ').filter(w=>w.length>=4&&!GEN.test(w)&&!/^(
 function gdLP(e){const L=S.gdx?.empresasLP?.lista;if(!L||!e)return null;const c=nCif(e.nif);let m=c?L.filter(x=>nCif(x.nif)===c):[];
   if(!m.length){const w=palabras((e.nombre||'').split('/')[0]);if(!w.length)return null;m=L.filter(x=>{const g=new Set(palabras(x.nombre));return w.every(p=>g.has(p))});
     if(new Set(m.map(x=>nCif(x.nif))).size!==1)return null}
-  if(!m.length)return null;return{nif:m[0].nif,nombre:m[0].nombre,sedes:m.map(x=>x.mun).filter(Boolean),vig:m.some(x=>x.vig),tram:m.some(x=>x.tram)}}
+  if(!m.length)return null;const okM=x=>/^[^\s@,;]+@[^\s@,;]+\.[a-z]{2,}$/i.test(x||'');return{nif:m[0].nif,nombre:m[0].nombre,sedes:m.map(x=>x.mun).filter(Boolean),vig:m.some(x=>x.vig),tram:m.some(x=>x.tram),emails:[...new Set(m.map(x=>(x.email||'').trim().toLowerCase()).filter(okM))],tels:[...new Set(m.map(x=>x.tel).filter(Boolean))]}}
 const gdConcCif=cif=>{const L=S.gdx?.conciertos?.lista,c=nCif(cif);return L&&c?L.filter(x=>nCif(x.cif)===c).sort((a,b)=>(b.caducidad||'').localeCompare(a.caducidad||''))[0]||null:null};
 function concK(g){const n=GEO.norm(g.estado||'');if(/caduc/.test(n))return'cad';if(/tramite|solicit|pendiente|firma/.test(n))return'tramite';if(/vigente|activo|firmado|aprobado/.test(n))return'si';return null}
 function gdConcHTML(e){const lp=gdLP(e);if(lp){const g=gdConcCif(lp.nif)||gdConc(e);return`<p class="info" style="margin:10px 0 0">GDCAN (La Palma): <b>${lp.vig?'concierto vigente con el centro':lp.tram?'concierto en trámite con el centro':'sin concierto con el centro'}</b>${lp.vig&&g?.caducidad?' · caduca '+fmtD(g.caducidad):''} · ${esc(lp.nombre||'')}${lp.nif?' · CIF '+esc(lp.nif):''}<br><small class="note">Este dato manda sobre el estado que pongas a mano.</small></p>`}
@@ -625,7 +625,12 @@ function autoGdcan(){
     if(dni&&!a.dni){a.dni=dni;ch=true}if(tel&&!a.telefono){a.telefono=tel;ch=true}
     if(em&&GEO.norm(a.email)!==GEO.norm(em)&&GEO.norm(a.email2)!==GEO.norm(em)){if(!a.email){a.email=em;ch=true}else if(!a.email2){a.email2=em;ch=true}}
     if(ch)save('alumnos',id)}
-  for(const[id,e]of Object.entries(S.emp)){if(e.nif)continue;const n=gdLP(e)?.nif||gdConc(e)?.cif;if(n){e.nif=n;save('empresas',id)}}}
+  for(const[id,e]of Object.entries(S.emp)){let ch=false;const lp=gdLP(e);
+    if(!e.nif){const n=lp?.nif||gdConc(e)?.cif;if(n){e.nif=n;ch=true}}
+    // correo y teléfono generales de GDCAN: solo si la ficha no tiene ninguno, y una sola vez (si luego lo borras, no vuelve)
+    if(lp?.emails.length&&!e.gdEmail){const C=e.contactos??=[];if(!C.some(c=>c.email)){C.push({nombre:'Correo general (GDCAN)',rol:'',telefono:'',email:lp.emails[0]})}e.gdEmail=lp.emails[0];ch=true}
+    if(lp?.tels.length&&!e.telefono){e.telefono=lp.tels[0];ch=true}
+    if(ch)save('empresas',id)}}
 function ssInfo(s){const n=GEO.norm(s||'');if(!n)return null;if(/alta correcta/.test(n))return['ok','Alta en la S. Social'];if(/no enviada/.test(n))return['','No enviada a la S. Social'];
   if(/pendiente|enviada/.test(n))return['wa','Enviada a la S. Social, sin respuesta'];if(/baja/.test(n))return['','Baja en la S. Social'];return['bad','Incidencia en la S. Social: '+s]}
 const hhmm=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/g);if(!m||m.length<2)return 0;const[a,b]=m.map(x=>{const[h,mi]=x.split(':');return+h*60+ +mi});return Math.max(0,b-a)};
