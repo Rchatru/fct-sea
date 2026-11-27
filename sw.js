@@ -1,5 +1,5 @@
 // Caché básica para que la web abra rápido y se pueda instalar. Los datos siempre vienen de Supabase.
-const V='fct-v11';
+const V='fct-v12';
 const ESTATICOS=['app.js','stack.js','vendor/fonts/public-sans-latin-400-normal.woff2','vendor/fonts/public-sans-latin-500-normal.woff2','vendor/fonts/public-sans-latin-600-normal.woff2','vendor/fonts/public-sans-latin-700-normal.woff2','vendor/supabase.js','vendor/leaflet/leaflet.js','vendor/leaflet/leaflet.css','geo.js','icons/icon-192.png','icons/icon-512.png','manifest.webmanifest'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(ESTATICOS)).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
