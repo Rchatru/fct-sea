@@ -885,7 +885,6 @@ function openLlamadas(){const L=listaLlamadas();const F=L.filter(x=>llFiltro==='
       <div class="llb"><div class="llal">${x.asig.length?`<div><span class="tag ok">Asignados</span> ${x.asig.map(a=>nomC(S.alu[a].nombre)).join(', ')}</div>`:''}${x.r.map((l,k)=>l.length?`<div><span class="tag ${k?'':'ok'}">${k+1}ª</span> ${l.map(a=>nomC(S.alu[a].nombre)).join(', ')}</div>`:'').join('')}</div>
         <div class="llcs">${contactosHTML(e)}</div>
       <div class="llf2"><label>Plazas que acepta<input type="number" min="0" data-llpl="${x.id}" value="${esc(pl)}" placeholder="?"></label>
-        <button class="sec" data-llmail="${x.id}" style="align-self:end">Correo</button>
         <label>Respuesta<select data-llest="${x.id}">${Object.entries(LLAM_EST).map(([k,t])=>`<option value="${k}"${(ll.estado||'')===k?' selected':''}>${t}</option>`).join('')}</select></label>
         <label class="llnota">Nota<input data-llnota="${x.id}" value="${esc(ll.nota||'')}" placeholder="p. ej. llamar el lunes a partir de las 10"></label>
         ${falta?`<p class="note bad" style="grid-column:1/-1;margin:0">${x.asig.length>+pl?`Tiene ${x.asig.length} asignado(s) y acepta ${pl}: el reparto moverá a ${x.asig.length-pl}.`:`Le piden ${x.n1} en 1ª opción y acepta ${pl}: ${x.n1-pl} no podrán ir a su 1ª opción.`}</p>`:''}${ll.fecha?`<p class="note" style="grid-column:1/-1;margin:0">Última anotación: ${fmtD(ll.fecha)}</p>`:''}</div></div></div>`}).join('')||'<p class="note">No hay empresas con ese filtro.</p>'}</div>`;
@@ -896,12 +895,7 @@ document.addEventListener('change',ev=>{const t=ev.target;
   if(t.dataset.llpl){e.plazas=t.value===''?null:Math.max(0,+t.value);}
   else{e.llamada={...(e.llamada||{})};if(t.dataset.llest){e.llamada.estado=t.value;if(t.value==='no'&&!(e.plazas===0))e.plazas=0}else e.llamada.nota=t.value.trim()}
   (e.llamada??={}).fecha=hoyISO();save('empresas',id);render();openLlamadas()});
-document.addEventListener('click',ev=>{const t=ev.target.closest('#callL,#llCsv,[data-llmail]');if(!t)return;if(t.id==='callL')return openLlamadas();
-  if(t.dataset.llmail){const e=S.emp[t.dataset.llmail];if(!e)return;const p=plantillas().find(x=>x.id==='p8')||PLANT_DEF.find(x=>x.id==='p8');
-    const V={firma:firma(),empresa:e.nombre,inicio:(d=>d?+d.slice(8,10)+' de '+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][+d.slice(5,7)-1]:'9 de diciembre')(S.aj.fechaInicio)};const f=x=>(x||'').replace(/\{(\w+)\}/g,(m,k)=>k in V?V[k]:m);
-    const to=[...new Set((e.contactos||[]).map(c=>c.email).filter(Boolean))].join(','),c=S.aj.correo||'mailto',X=encodeURIComponent,as=f(p.asunto),tx=f(p.cuerpo);
-    e.llamada={...(e.llamada||{}),estado:e.llamada?.estado||'pend',fecha:hoyISO(),nota:e.llamada?.nota||'Correo enviado '+fmtD(hoyISO())};save('empresas',t.dataset.llmail);
-    abrirURL(c==='outlook'?`https://outlook.office.com/mail/deeplink/compose?to=${X(to)}&subject=${X(as)}&body=${X(tx)}`:c==='gmail'?`https://mail.google.com/mail/?view=cm&fs=1&to=${X(to)}&su=${X(as)}&body=${X(tx)}`:`mailto:${X(to)}?subject=${X(as)}&body=${X(tx)}`);openLlamadas();return}
+document.addEventListener('click',ev=>{const t=ev.target.closest('#callL,#llCsv');if(!t)return;if(t.id==='callL')return openLlamadas();
   const L=listaLlamadas(),q=v=>{let s=String(v??'');if(/^[=+\-@\t\r]/.test(s))s="'"+s;return'"'+s.replace(/"/g,'""')+'"'};
   const filas=[['Empresa','Asignados','Alumnado asignado','1ª opción','Total','Alumnado 1ª opción','Alumnado 2ª-5ª','Contactos','Plazas que acepta','Respuesta','Nota']].concat(L.map(x=>[x.e.nombre,x.asig.length,x.asig.map(a=>S.alu[a].nombre).join('; '),x.n1,x.tot,x.r[0].map(a=>S.alu[a].nombre).join('; '),x.r.slice(1).flatMap((l,k)=>l.map(a=>S.alu[a].nombre+' ('+(k+2)+'ª)')).join('; '),
     [...(x.e.contactos||[])].map(c=>[c.nombre,c.rol,c.telefono,c.email].filter(Boolean).join(' / ')).concat(x.e.telefono?['Centralita '+x.e.telefono]:[]).join(' | '),x.e.plazas??'',LLAM_EST[x.e.llamada?.estado||''],x.e.llamada?.nota||'']));
