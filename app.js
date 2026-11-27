@@ -18,10 +18,11 @@ const sortedEmp=()=>Object.entries(S.emp).sort((a,b)=>(a[1].n||999)-(b[1].n||999
 const sortedAlu=()=>Object.entries(S.alu).sort((a,b)=>a[1].nombre.localeCompare(b[1].nombre));
 
 function conc(e){ // estado efectivo del concierto (si GDCAN lo conoce, manda GDCAN)
+  const lp=gdLP(e);if(lp){if(lp.vig){const cad=(gdConcCif(lp.nif)||gdConc(e))?.caducidad;return cad&&cad<refDate()?'cad':'si'}return lp.tram?'tramite':'no'}
   const g=gdConc(e),k=g&&concK(g);if(k){if(k==='si'&&g.caducidad&&g.caducidad<refDate())return'cad';return k}
   if(e.concierto==='si'){if(e.caducidad&&e.caducidad<refDate())return'cad';return'si'}
   return e.concierto||'no'}
-function concTag(e){const c=conc(e),g=gdConc(e),cad=g?.caducidad||e.caducidad;
+function concTag(e){const c=conc(e),lp=gdLP(e),g=gdConc(e)||(lp&&gdConcCif(lp.nif)),cad=g?.caducidad||e.caducidad;
   if(c==='si'){const pronto=cad&&diasEntre(hoyISO(),cad)<=90;return`<span class="tag ${pronto?'wa':'ok'}" ${g?'title="Dato de GDCAN"':''}>Vigente${cad?' hasta '+fmtD(cad):''}</span>`}
   if(c==='cad')return`<span class="tag bad">Caducado ${fmtD(cad)}</span>`;
   if(c==='tramite')return'<span class="tag wa">En trámite</span>';return'<span class="tag bad">Sin concierto</span>'}
@@ -597,8 +598,17 @@ function gdConc(e){const L=S.gdx?.conciertos?.lista;if(!L||!e)return null;const 
   let m=c?L.filter(x=>nCif(x.cif)===c):[];if(!m.length){const n=tkE(e.nombre);if(n)m=L.filter(x=>tkE(x.empresa)===n)}
   if(!m.length)return null;const r=x=>({si:0,tramite:1,cad:2}[concK(x)]??3);
   return[...m].sort((a,b)=>r(a)-r(b)||(b.caducidad||'').localeCompare(a.caducidad||''))[0]}
+// Empresas y sedes de La Palma (GDCAN, listado de empresas): estado del concierto con el centro
+const GEN=/^(instalaciones|instalacion|electricas|electrica|electricidad|electricos|servicios|sociedad|limitada|anonima|canarias|palma|grupo|hotel|empresa|santa|cruz|oficina|central)$/;
+const palabras=s=>tokens(s).split(' ').filter(w=>w.length>=4&&!GEN.test(w)&&!/^(sa|sl|slu|sau|slp)$/.test(w));
+function gdLP(e){const L=S.gdx?.empresasLP?.lista;if(!L||!e)return null;const c=nCif(e.nif);let m=c?L.filter(x=>nCif(x.nif)===c):[];
+  if(!m.length){const w=palabras((e.nombre||'').split('/')[0]);if(!w.length)return null;m=L.filter(x=>{const g=new Set(palabras(x.nombre));return w.every(p=>g.has(p))});
+    if(new Set(m.map(x=>nCif(x.nif))).size!==1)return null}
+  if(!m.length)return null;return{nif:m[0].nif,nombre:m[0].nombre,sedes:m.map(x=>x.mun).filter(Boolean),vig:m.some(x=>x.vig),tram:m.some(x=>x.tram)}}
+const gdConcCif=cif=>{const L=S.gdx?.conciertos?.lista,c=nCif(cif);return L&&c?L.filter(x=>nCif(x.cif)===c).sort((a,b)=>(b.caducidad||'').localeCompare(a.caducidad||''))[0]||null:null};
 function concK(g){const n=GEO.norm(g.estado||'');if(/caduc/.test(n))return'cad';if(/tramite|solicit|pendiente|firma/.test(n))return'tramite';if(/vigente|activo|firmado|aprobado/.test(n))return'si';return null}
-function gdConcHTML(e){const g=gdConc(e);if(!S.gdx?.conciertos)return'';
+function gdConcHTML(e){const lp=gdLP(e);if(lp){const g=gdConcCif(lp.nif)||gdConc(e);return`<p class="info" style="margin:10px 0 0">GDCAN (La Palma): <b>${lp.vig?'concierto vigente con el centro':lp.tram?'concierto en trámite con el centro':'sin concierto con el centro'}</b>${lp.vig&&g?.caducidad?' · caduca '+fmtD(g.caducidad):''} · ${esc(lp.nombre||'')}${lp.nif?' · CIF '+esc(lp.nif):''}<br><small class="note">Este dato manda sobre el estado que pongas a mano.</small></p>`}
+  const g=gdConc(e);if(!S.gdx?.conciertos)return'';
   if(!g)return`<p class="note">GDCAN: no encuentro un concierto para esta empresa${e.nif?'':' (pon el NIF/CIF para que la búsqueda sea exacta)'}. Se usa el estado que pongas arriba.</p>`;
   return`<p class="info" style="margin:10px 0 0">GDCAN: <b>${esc(g.estado||'—')}</b>${g.tipo?' · '+esc(g.tipo):''}${g.fecha?' · firmado '+fmtD(g.fecha):''}${g.caducidad?' · caduca '+fmtD(g.caducidad):''}${g.cif?' · CIF '+esc(g.cif):''}<br><small class="note">Este dato manda sobre el estado que pongas a mano.</small></p>`}
 function gdAlu(id){const a=S.alu[id],L=S.gdx?.alumnos?.lista;if(!a||!L)return null;const d=(a.dni||'').toUpperCase();
@@ -614,7 +624,7 @@ function autoGdcan(){
     if(dni&&!a.dni){a.dni=dni;ch=true}if(tel&&!a.telefono){a.telefono=tel;ch=true}
     if(em&&GEO.norm(a.email)!==GEO.norm(em)&&GEO.norm(a.email2)!==GEO.norm(em)){if(!a.email){a.email=em;ch=true}else if(!a.email2){a.email2=em;ch=true}}
     if(ch)save('alumnos',id)}
-  for(const[id,e]of Object.entries(S.emp)){if(e.nif)continue;const g=gdConc(e);if(g?.cif){e.nif=g.cif;save('empresas',id)}}}
+  for(const[id,e]of Object.entries(S.emp)){if(e.nif)continue;const n=gdLP(e)?.nif||gdConc(e)?.cif;if(n){e.nif=n;save('empresas',id)}}}
 function ssInfo(s){const n=GEO.norm(s||'');if(!n)return null;if(/alta correcta/.test(n))return['ok','Alta en la S. Social'];if(/no enviada/.test(n))return['','No enviada a la S. Social'];
   if(/pendiente|enviada/.test(n))return['wa','Enviada a la S. Social, sin respuesta'];if(/baja/.test(n))return['','Baja en la S. Social'];return['bad','Incidencia en la S. Social: '+s]}
 const hhmm=t=>{const m=String(t||'').match(/(\d{1,2}):(\d{2})/g);if(!m||m.length<2)return 0;const[a,b]=m.map(x=>{const[h,mi]=x.split(':');return+h*60+ +mi});return Math.max(0,b-a)};
